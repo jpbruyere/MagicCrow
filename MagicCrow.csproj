@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{029B2875-9C26-4A3E-A33F-6F6EF4A68AFC}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>MagicCrow</RootNamespace>
+    <AssemblyName>MagicCrow</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <OutputPath>$(SolutionDir)build\$(Configuration)</OutputPath>
+    <IntermediateOutputPath>$(SolutionDir)build\obj\$(Configuration)</IntermediateOutputPath>
+    <CustomCommands>
+      <CustomCommands>
+        <Command type="Execute" command="${TargetName}" workingdir="${SolutionDir}/build/${ProjectConfigName}" />
+      </CustomCommands>
+    </CustomCommands>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <DefineConstants>TRACE;DEBUG;__linux__</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <Optimize>true</Optimize>
+    <DefineConstants>__linux__</DefineConstants>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Xml" />
+    <Reference Include="ICSharpCode.SharpZipLib" />
+    <Reference Include="cairo-sharp, Version=1.10.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756">
+      <Package>gtk-sharp-3.0</Package>
+    </Reference>
+    <Reference Include="OpenTK">
+      <HintPath>$(SolutionDir)packages\OpenTK.2.0.0\lib\net20\OpenTK.dll</HintPath>
+      <Package>opentk</Package>
+    </Reference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <ItemGroup>
+    <ProjectReference Include="lib\Crow\Crow.csproj">
+      <Project>{C2980F9B-4798-4C05-99E2-E174810F7C7B}</Project>
+      <Name>Crow</Name>
+    </ProjectReference>
+    <ProjectReference Include="lib\GGL\GGL.csproj">
+      <Project>{5490AD74-0BB3-438C-9DE4-EB7CFC68BCB5}</Project>
+      <Name>GGL</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="src\" />
+    <Folder Include="src\crowOTK\" />
+    <Folder Include="ui\" />
+    <Folder Include="src\engine\" />
+    <Folder Include="src\LayoutsAndGroups\" />
+    <Folder Include="src\divers\" />
+    <Folder Include="images\" />
+    <Folder Include="images\expansions\" />
+    <Folder Include="shaders\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="lib\Crow\Tests\CrowWindow.cs">
+      <Link>src\crowOTK\CrowWindow.cs</Link>
+    </Compile>
+    <Compile Include="lib\Crow\Tests\InterfaceControler.cs">
+      <Link>src\crowOTK\InterfaceControler.cs</Link>
+    </Compile>
+    <Compile Include="lib\Crow\Tests\OpenGL\Extensions.cs">
+      <Link>src\crowOTK\Extensions.cs</Link>
+    </Compile>
+    <Compile Include="lib\Crow\Tests\OpenGL\Shader.cs">
+      <Link>src\crowOTK\Shader.cs</Link>
+    </Compile>
+    <Compile Include="lib\Crow\Tests\OpenGL\Texture.cs">
+      <Link>src\crowOTK\Texture.cs</Link>
+    </Compile>
+    <Compile Include="lib\Crow\Tests\OpenGL\vaoMesh.cs">
+      <Link>src\crowOTK\vaoMesh.cs</Link>
+    </Compile>
+    <Compile Include="src\MainWin.cs" />
+    <Compile Include="src\Deck.cs" />
+    <Compile Include="src\MagicCard.cs" />
+    <Compile Include="src\MagicData.cs" />
+    <Compile Include="src\engine\Abilities.cs" />
+    <Compile Include="src\engine\Ability.cs" />
+    <Compile Include="src\engine\AbilityActivation.cs" />
+    <Compile Include="src\engine\Attribut.cs" />
+    <Compile Include="src\engine\CardCounter.cs" />
+    <Compile Include="src\engine\CardTarget.cs" />
+    <Compile Include="src\engine\Cost.cs" />
+    <Compile Include="src\engine\Damage.cs" />
+    <Compile Include="src\engine\Enums.cs" />
+    <Compile Include="src\engine\IntegerValue.cs" />
+    <Compile Include="src\engine\MagicAction.cs" />
+    <Compile Include="src\engine\MagicChoice.cs" />
+    <Compile Include="src\engine\MagicEngine.cs" />
+    <Compile Include="src\engine\MagicEventArgs.cs" />
+    <Compile Include="src\engine\MagicStack.cs" />
+    <Compile Include="src\engine\MagicStackElement.cs" />
+    <Compile Include="src\engine\Mana.cs" />
+    <Compile Include="src\engine\NewCost.cs" />
+    <Compile Include="src\engine\Spell.cs" />
+    <Compile Include="src\engine\Target.cs" />
+    <Compile Include="src\engine\Trigger.cs" />
+    <Compile Include="src\engine\Effects\AbilityEffect.cs" />
+    <Compile Include="src\engine\Effects\ChangeZoneEffect.cs" />
+    <Compile Include="src\engine\Effects\CounterEffect.cs" />
+    <Compile Include="src\engine\Effects\DamageEffect.cs" />
+    <Compile Include="src\engine\Effects\Effect.cs" />
+    <Compile Include="src\engine\Effects\EffectGroup.cs" />
+    <Compile Include="src\engine\Effects\EffectInstance.cs" />
+    <Compile Include="src\engine\Effects\ManaEffect.cs" />
+    <Compile Include="src\engine\Effects\NumericEffect.cs" />
+    <Compile Include="src\engine\Effects\TokenEffect.cs" />
+    <Compile Include="src\CardInstance.cs" />
+    <Compile Include="src\AiPlayer.cs" />
+    <Compile Include="src\CardsGroupAnimation.cs" />
+    <Compile Include="src\Edition.cs" />
+    <Compile Include="src\Player.cs" />
+    <Compile Include="src\SVarToResolve.cs" />
+    <Compile Include="src\LayoutsAndGroups\CardGroup.cs" />
+    <Compile Include="src\LayoutsAndGroups\CardLayout.cs" />
+    <Compile Include="src\LayoutsAndGroups\InPlayGroup.cs" />
+    <Compile Include="src\LayoutsAndGroups\LandsLayout.cs" />
+    <Compile Include="src\LayoutsAndGroups\Layout3d.cs" />
+    <Compile Include="src\LayoutsAndGroups\Library.cs" />
+    <Compile Include="src\LayoutsAndGroups\MagicStackLayout.cs" />
+    <Compile Include="src\divers\Coin.cs" />
+    <Compile Include="src\divers\IAnimatable.cs" />
+    <Compile Include="src\divers\IRenderable.cs" />
+    <Compile Include="src\RenderedCardModel.cs" />
+    <Compile Include="src\divers\ExtentionMethods.cs" />
+    <Compile Include="shaders\MultiShader.cs" />
+    <Compile Include="src\RenderCache.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="ui\mainMenu.iml" />
+    <EmbeddedResource Include="ui\DeckItem.Template" />
+    <EmbeddedResource Include="images\expansions\10E.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\4ED.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\5DN.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\5ED.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\6ED.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\7ED.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\8ED.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\9ED.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\ALA.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\ARB.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\AVR.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\BNG.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\BOK.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\CFX.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\CHK.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\CSP.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\DIS.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\DKA.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\DST.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\EVE.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\EXO.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\FUT.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\GPT.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\GTC.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\ISD.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\JOU.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\JUD.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\LGN.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\LRW.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\M10.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\M11.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\M12.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\M13.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\M14.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\M15.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\MBS.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\MMQ.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\MOR.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\MRD.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\NMS.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\NPH.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\ODY.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\PCY.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\PLC.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\RAV.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\ROE.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\RTR.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\SHM.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\SOK.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\SOM.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\STH.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\THS.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\TMP.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\TOR.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\UDS.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\ULG.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\USG.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\WWK.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="images\expansions\ZEN.svg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ui\CardItem.Template" />
+    <EmbeddedResource Include="ui\ListBox.Template">
+      <LogicalName>Crow.ListBox.Template</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ui\cardModel.iml" />
+    <EmbeddedResource Include="ui\CostItem.Template" />
+    <EmbeddedResource Include="ui\ImgList.Template" />
+    <EmbeddedResource Include="images\Mana2.svg" />
+    <EmbeddedResource Include="ui\AbilityItem.Template" />
+    <EmbeddedResource Include="ui\decks.iml" />
+    <EmbeddedResource Include="ui\deckCards.iml" />
+    <EmbeddedResource Include="shaders\main.frag" />
+    <EmbeddedResource Include="shaders\main.vert" />
+    <EmbeddedResource Include="images\card_back.jpg" />
+    <EmbeddedResource Include="ui\player.iml" />
+    <EmbeddedResource Include="ui\engine.iml" />
+    <EmbeddedResource Include="ui\keepOrMuligan.iml" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cardsfolder.zip">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="images\marble1.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+</Project>

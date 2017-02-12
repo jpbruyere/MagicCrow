@@ -1,0 +1,4 @@
+﻿<?xml version="1.0"?>
+<Border Margin="1" >
+	<HorizontalStack Name="ItemsContainer" Fit="true"/>
+</Border>

@@ -1,0 +1,11 @@
+﻿<?xml version="1.0"?>
+<HorizontalStack Height="Fit">
+	<ListBox Data="{CostElements}" Fit="true" 
+			ItemTemplate="#MagicCrow.ui.CostItem.Template"
+			Template="#MagicCrow.ui.ImgList.Template"/>
+<!--	<Label Text="{}"/>-->
+<!--	<Label Text="{ActivationCost}" />-->
+	<Label Text="{Description}" />
+	<Label Text="{Message}" />
+</HorizontalStack>
+

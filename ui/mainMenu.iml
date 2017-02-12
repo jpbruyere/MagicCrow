@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<Border BorderWidth="2"	CornerRadius="10" Width="50%" Height="60%" Background="Onyx">
+	<HorizontalStack>
+		<VerticalStack Width="40%"  Margin="10" Background="Jet">
+			<Label Text="Player 1" Font="MagicMedieval, 22" />
+			<ComboBox
+				SelectedItemChanged="onP1DeckChanged"
+				Data="{DeckList}"
+				ItemTemplate="#MagicCrow.ui.DeckItem.Template"
+				SelectedIndex="{²P1DeckIdx}">
+			</ComboBox>	
+		</VerticalStack>		
+		<VerticalStack Spacing="10" Height="Fit">
+			<Button 
+				Caption="New Game"
+				MouseClick="onStartNewGame"/>
+			<Button 
+				Caption="Decks"
+				MouseClick="onShowDecks"/>
+			<Button 
+				Caption="Cards"
+				MouseClick="onShowCards"/>
+			<Button 
+				Caption="Exit"
+				MouseClick="onButExit_MouseClick" />
+		</VerticalStack>
+		<VerticalStack Width="40%" Margin="10" Background="Jet">
+			<Label Text="Player 2" Font="MagicMedieval, 22" />
+			<ComboBox
+				SelectedItemChanged="onP2DeckChanged"
+				Data="{DeckList}"
+				ItemTemplate="#MagicCrow.ui.DeckItem.Template"
+				SelectedIndex="{²P2DeckIdx}">
+			</ComboBox>	
+		</VerticalStack>		
+	</HorizontalStack>
+</Border>
+

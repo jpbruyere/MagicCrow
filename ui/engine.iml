@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<Border BorderWidth="2"	CornerRadius="10" Width="40%" Height="60" Background="Onyx" VerticalAlignment="Top">
+	<VerticalStack Margin="10">
+		<HorizontalStack Height="Fit" Spacing="5">
+			<Label Text="Engine state:"/>
+			<Label Text="{CurrentPhase}"/>
+		</HorizontalStack>
+	</VerticalStack>
+</Border>

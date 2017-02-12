@@ -1,0 +1,13 @@
+﻿<?xml version="1.0"?>
+<Border Foreground="Transparent" Height="Fit" Focusable="true">
+	<HorizontalStack Spacing="10"
+		MouseEnter="{Background=BlueCrayola}"
+		MouseLeave="{Background=Transparent}">
+		<Label Text="{name}" Width="Stretched"/>
+		<Label Text="{code}" Width="Fit"/>
+		<Image Width="16" Height="16" Path="{ExpansionImg}"/>
+<!--		<Label Text="{count}" Width="Fit"/>-->
+		<Spinner Value="{count}" Width="50"/>
+	</HorizontalStack>
+</Border>
+

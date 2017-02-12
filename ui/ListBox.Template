@@ -1,0 +1,12 @@
+﻿<?xml version="1.0"?>
+<HorizontalStack>
+	<Scroller ScrollX="{../scrollbar1.Value}"  Name="scroller1"
+		VerticalScrolling="true" HorizontalScrolling="false">
+		<VerticalStack Height="Fit" VerticalAlignment="Top"
+			Name="ItemsContainer" Margin="0" Spacing="1"/>
+	</Scroller>
+	<ScrollBar Name="scrollbar1" Value="{²../scroller1.ScrollY}"
+		Maximum="{../scroller1.MaximumScroll}" Orientation="Vertical"
+		Width="14" />
+</HorizontalStack>
+

@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<Window Caption="Deck" Height="50%" Width="300">
+	<VerticalStack>
+		<Container Height="Fit" Background="Jet" DataSource="{SelectedDeck}">
+			<HorizontalStack Margin="5" Width="Fit">
+				<Image Width="32" Height="32" Path="{ImgSetPath}"/>
+				<Label Margin="5" Text="{}" Font="MagicMedieval, 22" />
+			</HorizontalStack>
+		</Container>
+		<ListBox Name="cardEntries" Data="{CardEntries}"
+			SelectedItemChanged="onCardListValueChange"
+			ItemTemplate="#MagicCrow.ui.CardItem.Template"/>
+		<Button Caption="Save in cache" MouseClick="onSaveInCache"/>
+	</VerticalStack>	
+</Window>
+

@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<Window Caption="Preconstructed Decks" Height="50%" Width="200">
+	<ListBox Data="{DeckList}" Name="deckList" 
+		SelectedItemChanged="onPreconDeckListValueChange"								
+		ItemTemplate="#MagicCrow.ui.DeckItem.Template">
+	</ListBox>
+</Window>
+
