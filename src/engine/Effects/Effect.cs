@@ -160,7 +160,7 @@ namespace MagicCrow
 				else 
 					picPath = System.IO.Path.Combine (picPath, tkEff.Image + ".jpg").Replace(' ','_').ToLower();				
 
-				tk.SetTexture(picPath);
+				//tk.SetTexture(picPath);
 
 				Player[] players;
 

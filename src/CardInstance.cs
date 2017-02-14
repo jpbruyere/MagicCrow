@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using Cairo;
 using GGL;
-using Crow;
+//using Crow;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
 
@@ -19,8 +19,6 @@ namespace MagicCrow
     [Serializable]
 	public class CardInstance : RenderedCardModel, IDamagable
     {
-		static Random rnd = new Random();
-
 		#region CardAnimEvent
 		public class CardAnimEventArg : EventArgs
 		{
@@ -32,7 +30,6 @@ namespace MagicCrow
 		#endregion
 
 		public string Edition;
-		int _selectedTexture = -1;
 		public MagicAction BindedAction = null;
 
 		#region CTOR
@@ -46,10 +43,6 @@ namespace MagicCrow
 			Model = _bindedAction.CardSource.Model;
 		}
 		#endregion
-
-		public String Name {
-			get { return Model.Name; }
-		}
 
         #region selection
 		/// <summary>
@@ -74,7 +67,38 @@ namespace MagicCrow
 		        
         public CardGroup CurrentGroup;
 		public bool HasFocus = false;
-		public bool HasSummoningSickness = false;
+		public bool hasSummoningSickness = false;
+
+		public String Name {
+			get { return Model.Name; }
+		}
+		public bool HasSummoningSickness {
+			get { return hasSummoningSickness; }
+			set {
+				if (hasSummoningSickness == value)
+					return;
+				hasSummoningSickness = value;
+
+				if (hasSummoningSickness)
+					overlayVboIdx = OverlayVBO.AddInstance ();				
+				else {
+					OverlayVBO.RemoveInstance (overlayVboIdx);
+					foreach (CardInstance ci in Magic.CurrentGameWin.cards.Where(c=>c.overlayVboIdx>0)) {
+						if (ci == this)
+							continue;
+						if (ci.overlayVboIdx > overlayVboIdx) {
+							ci.overlayVboIdx--;
+							ci.updateOverlayDatas ();
+						}
+					}
+					overlayVboIdx = -1;
+				}
+				updateInstacedDatas ();
+				OverlayVBO.UpdateVBO ();
+
+			}
+		}
+
 		public bool IsToken = false;
 		public bool Kicked = false;
 
@@ -134,7 +158,7 @@ namespace MagicCrow
             if (Toughness < 1)
                 PutIntoGraveyard();
             else
-                UpdateOverlay();
+                UpdateOverlaySurface();
         }
 		public void ChangeZone(CardGroupEnum _newZone){			
 			CardGroupEnum _oldZone = CurrentGroup.GroupName;
@@ -145,7 +169,65 @@ namespace MagicCrow
 			MagicEngine.CurrentEngine.RaiseMagicEvent (
 				new ChangeZoneEventArg (this, _oldZone, _newZone));
 
-			UpdateOverlay ();
+			if (_oldZone == _newZone)
+				return;
+				
+			if (HasType (CardTypes.Creature)) {
+				if (_newZone == CardGroupEnum.InPlay) {
+					pointOverlayVboIdx = PointOverlayVBO.AddInstance ();
+					PointOverlayVBO.UpdateVBO ();
+					byte[] newPObmp = new byte[pointOverlayWidth * pointOverlayHeight * 4 * 
+						PointOverlayVBO.InstancedDatas.Length];
+					if (PointOverlayBmp != null)
+						Array.Copy (PointOverlayBmp, newPObmp, PointOverlayBmp.Length);
+
+					PointOverlayBmp = newPObmp;
+
+					if (!GL.IsTexture (PointOverlayTexture)) {
+						PointOverlayTexture = GL.GenTexture ();
+						GL.BindTexture(TextureTarget.Texture2DArray, PointOverlayTexture);
+						GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+						GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+						GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureWrapR, (int)TextureWrapMode.ClampToEdge);
+					}else
+						GL.BindTexture(TextureTarget.Texture2DArray, PointOverlayTexture);
+					
+					GL.TexImage3D (TextureTarget.Texture2DArray, 0, PixelInternalFormat.Rgba,
+						pointOverlayWidth, pointOverlayHeight, PointOverlayVBO.InstancedDatas.Length, 0,
+						OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, PointOverlayBmp);
+					GL.BindTexture(TextureTarget.Texture2DArray, 0);
+
+					UpdateOverlaySurface ();
+				}else if (_oldZone == CardGroupEnum.InPlay) {
+					PointOverlayVBO.RemoveInstance (pointOverlayVboIdx);
+					if (PointOverlayVBO.InstancedDatas.Length > 0) {
+						foreach (CardInstance ci in Magic.CurrentGameWin.Players.SelectMany(p => p.InPlay.Cards.Where(c => c.pointOverlayVboIdx>0))) {
+							if (ci == this)
+								continue;
+							if (ci.pointOverlayVboIdx > pointOverlayVboIdx) {
+								ci.pointOverlayVboIdx--;
+								ci.updatePointOverlayDatas ();
+							}
+						}
+						int oSize = pointOverlayWidth * pointOverlayHeight * 4;
+						byte[] newPObmp = new byte[oSize * PointOverlayVBO.InstancedDatas.Length];
+						Array.Copy (PointOverlayBmp, 0, newPObmp, 0, oSize * pointOverlayVboIdx);
+						Array.Copy (PointOverlayBmp, oSize * (pointOverlayVboIdx + 1), newPObmp, oSize * pointOverlayVboIdx,
+							oSize * (PointOverlayVBO.InstancedDatas.Length - pointOverlayVboIdx - 1));
+						
+						PointOverlayBmp = newPObmp;
+						GL.BindTexture(TextureTarget.Texture2DArray, PointOverlayTexture);
+						GL.TexImage3D (TextureTarget.Texture2DArray, 0, PixelInternalFormat.Rgba,
+							pointOverlayWidth, pointOverlayHeight, PointOverlayVBO.InstancedDatas.Length, 0,
+							OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, PointOverlayBmp);
+						GL.BindTexture(TextureTarget.Texture2DArray, 0);
+					}
+					pointOverlayVboIdx = -1;
+					PointOverlayVBO.UpdateVBO ();
+					UpdateOverlaySurface ();
+				}
+
+			}
 		}
         public void PutIntoGraveyard()
         {
@@ -324,6 +406,7 @@ namespace MagicCrow
         }
 		public void UpdatePowerAndToughness()
 		{
+			Magic.AddLog ("DEBUG => Compute Power/Touchness : " + this.Name);
 			_power = int.MinValue;
 			_toughness = int.MinValue;
 
@@ -550,35 +633,35 @@ namespace MagicCrow
 
        	public void SwitchFocus()
         {
-//            HasFocus = !HasFocus;
-//
-//            if (HasFocus)
-//            {
-//                Debug.WriteLine("{0} => {1}", this.Model.Name, this.Model.Oracle);
-//                if (focusedCard != null)
-//                    focusedCard.SwitchFocus();
-//
-//				Vector3 v = Magic.vFocusedPoint;
-//                SavePosition();
-//				                
-//				v = v.Transform(Matrix4.Invert(Controler.Transformations));
-//				Animation.StartAnimation(new FloatAnimation(this, "x", v.X, 0.9f));
-//				Animation.StartAnimation(new FloatAnimation(this, "y", v.Y, 1.2f));
-//				Animation.StartAnimation(new FloatAnimation(this, "z", v.Z, 0.9f));
-//				float aCam = Magic.FocusAngle;
-//				Animation.StartAnimation(new AngleAnimation(this, "xAngle", aCam, MathHelper.Pi * 0.1f));
-//                //Animation.StartAnimation(new AngleAnimation(this, "yAngle", -Controler.Value.zAngle, MathHelper.Pi * 0.03f));
-//                Animation.StartAnimation(new AngleAnimation(this, "zAngle", -Controler.zAngle, MathHelper.Pi * 0.3f));
-//				Animation.StartAnimation (new FloatAnimation (this, "Scale", 1.0f, 0.05f));
-//
-//
-//                focusedCard = this;
-//            }
-//            else
-//            {
-//                focusedCard = null;
-//                RestoreSavedPosition();
-//            }
+            HasFocus = !HasFocus;
+
+            if (HasFocus)
+            {
+                //Debug.WriteLine("{0} => {1}", this.Model.Name, this.Model.Oracle);
+                if (focusedCard != null)
+                    focusedCard.SwitchFocus();
+
+				Vector3 v = Magic.vFocusedPoint;
+                SavePosition();
+				                
+				v = v.Transform(Matrix4.Invert(Controler.Transformations));
+				Animation.StartAnimation(new FloatAnimation(this, "x", v.X, 0.9f));
+				Animation.StartAnimation(new FloatAnimation(this, "y", v.Y, 1.2f));
+				Animation.StartAnimation(new FloatAnimation(this, "z", v.Z, 0.9f));
+				float aCam = Magic.FocusAngle;
+				Animation.StartAnimation(new AngleAnimation(this, "xAngle", aCam, MathHelper.Pi * 0.1f));
+                //Animation.StartAnimation(new AngleAnimation(this, "yAngle", -Controler.Value.zAngle, MathHelper.Pi * 0.03f));
+                Animation.StartAnimation(new AngleAnimation(this, "zAngle", -Controler.zAngle, MathHelper.Pi * 0.3f));
+				Animation.StartAnimation (new FloatAnimation (this, "Scale", 1.0f, 0.05f));
+
+
+                focusedCard = this;
+            }
+            else
+            {
+                focusedCard = null;
+                RestoreSavedPosition();
+            }
         }
 
         public void SavePosition()
@@ -635,73 +718,6 @@ namespace MagicCrow
 		}
 		#endregion
 
-		#region IRenderable implementation
-		public override void Render ()
-		{
-//			Matrix4 mSave = Magic.texturedShader.ModelMatrix;            
-//			Magic.texturedShader.ModelMatrix = ModelMatrix * Magic.texturedShader.ModelMatrix;
-//
-//			if (CardInstance.selectedCard == this)
-//				Magic.texturedShader.Color = SelectedColor;
-//			else if (Combating)
-//				Magic.texturedShader.Color = AttackingColor;
-//			else 
-//				Magic.texturedShader.Color = notSelectedColor;
-//
-//			if (_selectedTexture < 0) {
-//				if (Model.nbrImg > 1)
-//					_selectedTexture = rnd.Next (Model.nbrImg);
-//				else
-//					_selectedTexture = 0;
-//			}
-//			Magic.texturedShader.UpdateUniforms ();
-//			Model.Render(Edition, _selectedTexture);
-//
-//			if (pointsTexture != 0 && CurrentGroup != null && !HasFocus)
-//			{				
-//				if (CurrentGroup.GroupName == CardGroupEnum.InPlay)
-//				{
-//					Magic.texturedShader.Color = new Vector4 (1, 1, 1, 1);
-//
-//					Matrix4 mMod = Magic.texturedShader.ModelMatrix;
-//					Matrix4 mO = Matrix4.CreateRotationX (Magic.FocusAngle) * Matrix4.CreateRotationZ (-Controler.zAngle);
-//
-//					if (_isTapped)
-//						mO *= Matrix4.CreateRotationZ (MathHelper.PiOver2);
-//
-//					Magic.texturedShader.ModelMatrix = 
-//						mO * Matrix4.CreateTranslation(-0.02f, 0.55f, 0.1f) * mMod;
-//					GL.BindTexture(TextureTarget.Texture2D, abilitiesTexture);
-//					MagicData.AbilityMesh.Render(BeginMode.TriangleStrip);
-//
-//					Magic.texturedShader.ModelMatrix = 
-//						mO * Matrix4.CreateTranslation(0.27f, -0.7f, 0.1f) * mMod;
-//					GL.BindTexture(TextureTarget.Texture2D, pointsTexture);
-//					Magic.texturedShader.UpdateUniforms ();
-//					MagicData.PointsMesh.Render(BeginMode.TriangleStrip);
-//
-//				}
-//			}
-//
-//			if (HasSummoningSickness) {			
-//				Magic.texturedShader.ModelMatrix = Matrix4.CreateTranslation (0, 0, 0.3f) * ModelMatrix * mSave ;
-//				Magic.texturedShader.UpdateUniforms ();
-//				GL.BindTexture (TextureTarget.Texture2D, Magic.wirlpoolShader.Texture);
-//				MagicData.CardMesh.Render (BeginMode.TriangleStrip);
-//				GL.BindTexture (TextureTarget.Texture2D, 0);
-//			}
-//
-//
-//			Magic.texturedShader.ModelMatrix = mSave;
-//			Magic.texturedShader.Color = new Vector4 (1, 1, 1, 1);
-//			Magic.texturedShader.UpdateUniforms ();
-//
-//			if (arrows == null)
-//				return;
-//
-//			renderArrow ();
-
-		}
 
 		#region Arrows
 		GGL.vaoMesh arrows;
@@ -734,157 +750,135 @@ namespace MagicCrow
 		}
 		#endregion
 
-		#endregion
-
 		#region Overlay
-		int pointsTexture = 0;
-		int abilitiesTexture = 0;
 		public void UpdateOverlayAbilities()
 		{
-			int width = 200;
-			int height = 40;
-			int x = 0;
-			int y = 0;
-
-			Bitmap bmp = new Bitmap(width, height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-			BitmapData data = bmp.LockBits(new System.Drawing.Rectangle(x, y, width, height),
-				ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-
-			int stride = 4 * width;
-
-			using (ImageSurface draw =
-				new ImageSurface(data.Scan0, Format.Argb32, width, height, stride))
-			{
-				using (Context gr = new Context(draw))
-				{
-//					Crow.Rectangle r = new Crow.Rectangle(0, 0, width, height);
-//					gr.Color = Crow.Color.White;
-//					gr.Rectangle(r);
+//			int x = 0;
+//			int y = 0;
+//
+//			Bitmap bmp = new Bitmap(pointOverlayWidth, pointOverlayHeight, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+//			BitmapData data = bmp.LockBits(new System.Drawing.Rectangle(x, y, pointOverlayWidth, pointOverlayHeight),
+//				ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+//
+//			int stride = 4 * pointOverlayWidth;
+//
+//			using (ImageSurface draw =
+//				new ImageSurface(data.Scan0, Format.Argb32, pointOverlayWidth, pointOverlayHeight, stride))
+//			{
+//				using (Context gr = new Context(draw))
+//				{
+//					Cairo.Rectangle r = new Cairo.Rectangle(0, 0, pointOverlayWidth, pointOverlayHeight);
+//					gr.SetSourceRGB (1,1,1);
+//					gr.Rectangle (r);
+//
 //					gr.Fill();
-
-
-					//
-					gr.Scale (0.45, 0.45);
-
-					foreach (AbilityEnum ae in getAllAbilities ().Select (a => a.AbilityType).Distinct ()) {
-						MagicData.hSVGsymbols.RenderCairoSub (gr, "#" + ae.ToString());
-						gr.Translate (100, 0);
-					}
-
-
-					draw.Flush();
-				}
-				//draw.WriteToPng(@"d:/test.png");
-			}
-			imgHelpers.imgHelpers.flipY(data.Scan0, stride, height);
-
-			if (abilitiesTexture == 0)
-			{
-				GL.GenTextures(1, out abilitiesTexture);
-				GL.BindTexture(TextureTarget.Texture2D, abilitiesTexture);
-				GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, data.Width, data.Height, 0,
-					OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
-				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
-				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
-//				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
-//				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
-			}
-			else
-			{				
-				GL.BindTexture(TextureTarget.Texture2D, abilitiesTexture);
-				GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, width, height,
-					OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
-			}
-			GL.BindTexture (TextureTarget.Texture2D, 0);
-			//bmp.Save(@"d:/test.png");
-			bmp.UnlockBits(data);
+//					gr.Scale (0.45, 0.45);
+//
+//					foreach (AbilityEnum ae in getAllAbilities ().Select (a => a.AbilityType).Distinct ()) {
+//						MagicData.hSVGsymbols.RenderCairoSub (gr, "#" + ae.ToString());
+//						gr.Translate (100, 0);
+//					}
+//
+//
+//					draw.Flush();
+//				}
+//				//draw.WriteToPng(@"d:/test.png");
+//			}
+//			imgHelpers.imgHelpers.flipY(data.Scan0, stride, pointOverlayHeight);
+//
+//			if (abilitiesTexture == 0)
+//			{
+//				GL.GenTextures(1, out abilitiesTexture);
+//				GL.BindTexture(TextureTarget.Texture2D, abilitiesTexture);
+//				GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, data.Width, data.Height, 0,
+//					OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
+//				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+//				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+////				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
+////				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
+//			}
+//			else
+//			{				
+//				GL.BindTexture(TextureTarget.Texture2D, abilitiesTexture);
+//				GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, pointOverlayWidth, pointOverlayHeight,
+//					OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
+//			}
+//			GL.BindTexture (TextureTarget.Texture2D, 0);
+//			//bmp.Save(@"d:/test.png");
+//			bmp.UnlockBits(data);
 		}
-		public void UpdateOverlay()
+		int _lastPaintedPower = int.MinValue, _lastPaintedToughness = int.MinValue;
+
+		public void UpdateOverlaySurface()
 		{
+			if (pointOverlayVboIdx < 0)
+				return;
 			if (!(this.HasType (CardTypes.Creature) && CurrentGroup.GroupName == CardGroupEnum.InPlay))
 				return;
-			
-			int width = 100;
-			int height = 40;
+
+			if (Power == _lastPaintedPower && Toughness == _lastPaintedToughness)
+				return;
+
+			_lastPaintedPower = Power;
+			_lastPaintedToughness = Toughness;
+
+			Magic.AddLog ("DEBUG => UPDATE POINT OVERLAY SURF : " + this.Name);
 			int x = 0;
-			int y = 0;
+			int y = pointOverlayVboIdx * pointOverlayHeight;
 
-			Bitmap bmp = new Bitmap(width, height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-			BitmapData data = bmp.LockBits(new System.Drawing.Rectangle(x, y, width, height),
-				ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-
-			int stride = 4 * width;
+			int stride = 4 * pointOverlayWidth;
 
 			using (ImageSurface draw =
-				new ImageSurface(data.Scan0, Format.Argb32, width, height, stride))
+				new ImageSurface(PointOverlayBmp, Format.Argb32,
+					pointOverlayWidth, pointOverlayHeight * PointOverlayVBO.InstancedDatas.Length, stride))
 			{
 				using (Context gr = new Context(draw))
 				{
-					Crow.Rectangle r = new Crow.Rectangle(0, 0, width, height);
+					Cairo.Rectangle r = new Cairo.Rectangle(x, y, pointOverlayWidth, pointOverlayHeight);
 
 					if (Damages.Count == 0)
-						gr.SetSourceColor(Crow.Color.White);
+						gr.SetSourceRGB (1,1,1);
 					else
-						gr.SetSourceColor(Crow.Color.Red);
+						gr.SetSourceRGB (1.0f,0.3f,0.4f);
 
 					gr.Rectangle(r);
 					gr.FillPreserve();
-					gr.SetSourceColor(Crow.Color.Black);
+					gr.SetSourceRGB (0,0,0);
 					gr.LineWidth = 1.5f;
 					gr.Stroke();
 
-					gr.SelectFontFace("Times New Roman", FontSlant.Normal, FontWeight.Bold);
-					gr.SetFontSize(40);
-					gr.SetSourceColor(Crow.Color.Black);
+					gr.SelectFontFace("Droid", FontSlant.Normal, FontWeight.Bold);
+					gr.SetFontSize(44);
+					gr.SetSourceRGB (0.2f,0.2f,0.2f);
 
 					string text = Power.ToString() + " / " + Toughness.ToString();
 
 					FontExtents fe = gr.FontExtents;
 					TextExtents te = gr.TextExtents(text);
-					double xt = width / 2 - te.Width / 2;
-					double yt = height / 2 + te.Height / 2;
+					double xt = pointOverlayWidth / 2 - te.Width / 2;
+					double yt = pointOverlayHeight / 2 - fe.Height / 2 + y + fe.Ascent;
 
 					gr.MoveTo(xt, yt);
 					gr.ShowText(text);
 
 					draw.Flush();
 				}
-				//draw.WriteToPng(@"d:/test.png");
 			}
 
-
-			imgHelpers.imgHelpers.flipY(data.Scan0, stride, height);
-
-			if (pointsTexture == 0)
-			{
-				GL.GenTextures(1, out pointsTexture);
-				GL.BindTexture(TextureTarget.Texture2D, pointsTexture);
-				GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, data.Width, data.Height, 0,
-					OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
-				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
-				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
-//				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
-//				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
-			}
-			else
-			{				
-				GL.BindTexture(TextureTarget.Texture2D, pointsTexture);
-				GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, width, height,
-					OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
-			}
-			GL.BindTexture (TextureTarget.Texture2D, 0);
+			GL.BindTexture(TextureTarget.Texture2DArray, PointOverlayTexture);
+			int oSize = pointOverlayWidth * pointOverlayHeight * 4;
+			byte[] tmp = new byte[oSize];
+			Array.Copy (PointOverlayBmp, pointOverlayVboIdx * oSize, tmp, 0, oSize);
+			GL.TexSubImage3D (TextureTarget.Texture2DArray, 0, 0, 0, pointOverlayVboIdx, pointOverlayWidth, pointOverlayHeight, 1,
+				OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, tmp);
+			GL.BindTexture(TextureTarget.Texture2DArray, 0);
 			//bmp.Save(@"d:/test.png");
-			bmp.UnlockBits(data);
 
 			UpdateOverlayAbilities ();
 		}
 		public void ResetOverlay()
 		{
-			if (GL.IsTexture (pointsTexture))
-				GL.DeleteTexture (pointsTexture);
-			if (GL.IsTexture (abilitiesTexture))
-				GL.DeleteTexture (abilitiesTexture);
-			pointsTexture = abilitiesTexture = 0;
+
 		}
 
 		#endregion

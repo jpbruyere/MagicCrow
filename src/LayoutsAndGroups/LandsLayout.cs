@@ -76,9 +76,9 @@ namespace MagicCrow
 				GGL.Animation.StartAnimation (new GGL.AngleAnimation (c, "xAngle", xAngle, MathHelper.Pi * 0.3f));
 				GGL.Animation.StartAnimation (new GGL.AngleAnimation (c, "yAngle", yAngle, MathHelper.Pi * 0.3f));
 				if (c.IsTapped)
-					GGL.Animation.StartAnimation (new GGL.FloatAnimation (c, "zAngle", -MathHelper.PiOver2, MathHelper.Pi * 0.1f));
+					GGL.Animation.StartAnimation (new GGL.FloatAnimation (c, "zAngle",zAngle -MathHelper.PiOver2, MathHelper.Pi * 0.1f));
 				else
-					GGL.Animation.StartAnimation (new GGL.FloatAnimation (c, "zAngle", 0, MathHelper.Pi * 0.1f));
+					GGL.Animation.StartAnimation (new GGL.FloatAnimation (c, "zAngle", zAngle, MathHelper.Pi * 0.1f));
 				GGL.Animation.StartAnimation (new GGL.FloatAnimation (c, "Scale", this.Scale, 0.05f));
 
 				i++;

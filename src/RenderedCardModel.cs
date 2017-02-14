@@ -4,10 +4,15 @@ using Tetra.DynamicShading;
 
 namespace MagicCrow
 {
-	public abstract class RenderedCardModel : IRenderable
+	public abstract class RenderedCardModel
 	{
-		public static InstancesVBO<CardInstancedData> CardsVBO;
-		public int instanceIdx;
+		public static InstancesVBO<CardInstancedData> CardsVBO, OverlayVBO, PointOverlayVBO;
+		public static byte[] PointOverlayBmp;
+		public static int PointOverlayTexture;
+		public const int pointOverlayWidth = 200;
+		public const int pointOverlayHeight = 40;
+
+		public int cardVboIdx, overlayVboIdx=-1, pointOverlayVboIdx=-1;
 
 		protected float _x = 0.0f;
 		protected float _y = 0.0f;
@@ -27,7 +32,7 @@ namespace MagicCrow
 					return;
 
 				_x = value;
-				updateInstacedVBO ();
+				updateInstacedDatas ();
 			}
 		}
 		public virtual float y
@@ -38,7 +43,7 @@ namespace MagicCrow
 					return;
 
 				_y = value;
-				updateInstacedVBO ();
+				updateInstacedDatas ();
 			}        
 		}
 		public virtual float z
@@ -49,7 +54,7 @@ namespace MagicCrow
 					return;
 
 				_z = value;
-				updateInstacedVBO ();
+				updateInstacedDatas ();
 			}        
 		}
 		public virtual float xAngle
@@ -60,7 +65,7 @@ namespace MagicCrow
 					return;
 
 				_xAngle = value; 
-				updateInstacedVBO ();
+				updateInstacedDatas ();
 			}
 		}
 		public virtual float yAngle
@@ -71,7 +76,7 @@ namespace MagicCrow
 					return;
 
 				_yAngle = value; 
-				updateInstacedVBO ();
+				updateInstacedDatas ();
 			}
 		}
 		public virtual float zAngle
@@ -82,7 +87,16 @@ namespace MagicCrow
 					return;
 
 				_zAngle = value; 
-				updateInstacedVBO ();
+				updateInstacedDatas ();
+			}
+		}
+		public virtual float Scale {
+			get { return _scale; }
+			set {
+				if (_scale == value)
+					return;
+				_scale = value;
+				updateInstacedDatas ();
 			}
 		}
 
@@ -92,63 +106,68 @@ namespace MagicCrow
 			{ return new Vector3(x, y, z); }
 			set
 			{
+				if (value == Position)
+					return;
 				_x = value.X;
 				_y = value.Y;
 				_z = value.Z;
-				updateInstacedVBO ();
+				updateInstacedDatas ();
 			}
 		}
 		public void ResetPositionAndRotation()
 		{
 			x = y = z = xAngle = yAngle = zAngle = 0;
-		}
+		}			
 
-		#region IRenderable implementation
-
-		public abstract void Render ();
 		public Matrix4 ModelMatrix {
 			get
 			{
-				Matrix4 transformation;
-
-
 				Matrix4 Rot = 
 					Matrix4.CreateRotationX (xAngle) *
 					Matrix4.CreateRotationY (yAngle) *
 					Matrix4.CreateRotationZ (zAngle);
 
-				//Matrix4 Rot = Matrix4.CreateRotationZ(zAngle);
-				transformation = Matrix4.CreateScale(Scale) *  Rot * Matrix4.CreateTranslation(x, y, z);
-
-				return transformation;
-			}
-			set {
-				throw new NotImplementedException ();
+				return Matrix4.CreateScale(Scale) *  Rot * Matrix4.CreateTranslation(x, y, z);
 			}
 		}
-
-		public void updateInstacedVBO(){
+		Matrix4 pointOverlayMatrix {
+			get
+			{
+				Matrix4 tmp =					
+					Matrix4.CreateTranslation (0.25f, -0.7f, 0.04f) *
+					Matrix4.CreateScale (Scale) *
+					Matrix4.CreateRotationX (xAngle) *
+					Matrix4.CreateRotationY (yAngle) *
+					//Matrix4.CreateRotationZ (zAngle) *
+					Matrix4.CreateTranslation (x, y, z);
+				return xAngle == 0f ? Matrix4.CreateRotationX (Magic.FocusAngle) * tmp : tmp;
+			}
+		}
+		public void updateInstacedDatas(){
 			if (CardsVBO == null)
 				return;
-			Matrix4 Rot = 
-				Matrix4.CreateRotationX (xAngle) *
-				Matrix4.CreateRotationY (yAngle) *
-				Matrix4.CreateRotationZ (zAngle);
+			Matrix4 mod = ModelMatrix;
 
-			//Matrix4 Rot = Matrix4.CreateRotationZ(zAngle);
-			CardsVBO.InstancedDatas[instanceIdx].modelMats = Matrix4.CreateScale(Scale) *  Rot * Matrix4.CreateTranslation(x, y, z);
-			CardsVBO.SetInstanceIsDirty (instanceIdx);
+			CardsVBO.InstancedDatas[cardVboIdx].modelMats = mod;
+			CardsVBO.SetInstanceIsDirty (cardVboIdx);
+			if (overlayVboIdx >= 0) {				
+				OverlayVBO.InstancedDatas [overlayVboIdx].modelMats = mod * Matrix4.CreateTranslation(0,0,0.1f);
+				OverlayVBO.SetInstanceIsDirty (overlayVboIdx);
+			}
+			if (pointOverlayVboIdx >= 0) {				
+				PointOverlayVBO.InstancedDatas [pointOverlayVboIdx].modelMats = pointOverlayMatrix;
+				PointOverlayVBO.InstancedDatas [pointOverlayVboIdx].picked = pointOverlayVboIdx;
+				PointOverlayVBO.SetInstanceIsDirty (pointOverlayVboIdx);
+			}
 		}
-		#endregion
-
-
-		public virtual float Scale {
-			get {
-				return _scale;
-			}
-			set {
-				_scale = value;
-			}
+		public void updateOverlayDatas(){
+			OverlayVBO.InstancedDatas [overlayVboIdx].modelMats = ModelMatrix * Matrix4.CreateTranslation(0,0,0.1f);
+			OverlayVBO.SetInstanceIsDirty (overlayVboIdx);
+		}
+		public void updatePointOverlayDatas(){
+			PointOverlayVBO.InstancedDatas [pointOverlayVboIdx].modelMats = pointOverlayMatrix;
+			PointOverlayVBO.InstancedDatas [pointOverlayVboIdx].picked = pointOverlayVboIdx;
+			PointOverlayVBO.SetInstanceIsDirty (pointOverlayVboIdx);
 		}
 	}
 }

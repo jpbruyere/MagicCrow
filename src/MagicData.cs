@@ -45,28 +45,31 @@ namespace MagicCrow
 			}
 			return result;
 		}
-		public static void InitCardModel()
-		{			
-			if (!Directory.Exists (cardsArtPath))
-				Directory.CreateDirectory (cardsArtPath);
-
-			hSVGsymbols = loadRessourceSvg ("MagicCrow.image2.abilities.svg");
-
-			CardBack = new Texture(@"images/card_back.jpg");
-
-			MagicData.CardMesh = new vaoMesh(0, 0, 0, MagicData.CardWidth, MagicData.CardHeight);
-			MagicData.AbilityMesh = new vaoMesh(0, 0, 0.002f, 1.0f, 0.2f);
-			MagicData.PointsMesh = new vaoMesh(0, 0, 0.002f, 0.50f, 0.2f);
+		public static void Init(){
+			hSVGsymbols = loadRessourceSvg ("MagicCrow.images.abilities.svg");
 		}
-		public static void DesinitCardModel()
-		{
-//			if (hSVGsymbols != null)
-//				hSVGsymbols.Dispose ();
-			GL.DeleteTexture(CardBack);
-			CardMesh.Dispose ();
-			AbilityMesh.Dispose ();
-			PointsMesh.Dispose ();
-		}
+//		public static void InitCardModel()
+//		{			
+//			if (!Directory.Exists (cardsArtPath))
+//				Directory.CreateDirectory (cardsArtPath);
+//
+//			hSVGsymbols = loadRessourceSvg ("MagicCrow.image2.abilities.svg");
+//
+//			CardBack = new Texture(@"images/card_back.jpg");
+//
+//			MagicData.CardMesh = new vaoMesh(0, 0, 0, MagicData.CardWidth, MagicData.CardHeight);
+//			MagicData.AbilityMesh = new vaoMesh(0, 0, 0.002f, 1.0f, 0.2f);
+//			MagicData.PointsMesh = new vaoMesh(0, 0, 0.002f, 0.50f, 0.2f);
+//		}
+//		public static void DesinitCardModel()
+//		{
+////			if (hSVGsymbols != null)
+////				hSVGsymbols.Dispose ();
+//			GL.DeleteTexture(CardBack);
+//			CardMesh.Dispose ();
+//			AbilityMesh.Dispose ();
+//			PointsMesh.Dispose ();
+//		}
 
 		public static List<MagicCard> MissingPicToDownload = new List<MagicCard>();
 
@@ -231,7 +234,7 @@ namespace MagicCrow
 						c.Abilities.Add(Ability.Parse(tmp[1]));
 						break;
 					case "oracle":
-						c.Oracle = tmp[1];
+						c.Oracle = string.Join ("\n", tmp.ToList ().GetRange (1, tmp.Length - 1).ToArray ());
 						break;
 					case "pt":
 						string[] pt = tmp[1].Split(new char[] { '/' });
@@ -442,21 +445,24 @@ namespace MagicCrow
 		public static Stream GetCardDataStream(string cardPath) {
 			ZipFile zf = null;
 			MemoryStream ms = new MemoryStream ();
+
 			try {
 				FileStream fs = File.OpenRead (MAGICZIP);
 				zf = new ZipFile (fs);
-			//	ZipEntry zipEntry = zf.FindEntry(cardPath,true);
-			//zf.GetInputStream(
-
-			Stream s = zf.GetInputStream (zf.FindEntry(cardPath,true));
-			s.CopyTo (ms);
-			
-			} finally {
-				if (zf != null) {
-					zf.Close (); 
+				int zipEntry = zf.FindEntry(cardPath,true);
+				if (zipEntry < 0){
+					ms = null;
+				}else{
+					Stream s = zf.GetInputStream (zf.FindEntry(cardPath,true));
+					s.CopyTo (ms);
+					ms.Seek(0,SeekOrigin.Begin);
 				}
+			} catch (Exception ex) {
+				Debug.WriteLine(ex.ToString());
+			} finally {
+				if (zf != null)
+					zf.Close ();
 			}
-			ms.Seek(0,SeekOrigin.Begin);
 			return ms;
 		}
 		static Rsvg.Handle loadRessourceSvg(string resId)

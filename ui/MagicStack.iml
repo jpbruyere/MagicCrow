@@ -1,0 +1,29 @@
+﻿<?xml version="1.0"?>
+<Window Visible="{UIPlayerActionIsOnStack}" Fit="true">
+	<Template>
+		<Border Name="Content" BorderWidth="1" Background="0.5,0.5,0.5,0.3" CornerRadius="10"/>
+	</Template>
+	<VerticalStack Margin="20">
+		<Label Text="{UIPlayerTitle}" Font="MagicMedieval, 16"/>
+		<Label Text="{UIPlayerMessage}" Font="MagicMedieval, 16" Visible="{MessageIsNotNull}"/>
+		<HorizontalStack Fit="true" Visible="{CostIsNotNull}">
+			<TextRun Text="Remaining Cost:" Font="MagicMedieval, 16"/>
+			<ListBox Data="{CostElements}" 
+					ItemTemplate="#MagicCrow.ui.CostItem.Template"
+						Template="#MagicCrow.ui.ImgList.Template"/>
+			<ListBox Data="{OtherCostElements}">
+				<Template>
+					<HorizontalStack Name="ItemsContainer"/>
+				</Template>
+			</ListBox>
+		</HorizontalStack>
+		<ListBox Data="{Choices}" Visible="{UIActionIsChoice}" Width="Fit" SelectedItemChanged="onChoiceMade"
+			ItemTemplate="#MagicCrow.ui.MSEItem.Template">
+			<Template>
+				<VerticalStack Margin="10" Name="ItemsContainer"/>
+			</Template>
+		</ListBox>-->
+		<Button HorizontalAlignment="Right"  Caption="Done" MouseClick="ActionDone_MouseClick" Height="Fit" Margin="5"/>
+	</VerticalStack>
+</Window>
+

@@ -835,6 +835,7 @@ namespace MagicCrow
 				case AbilityFieldsEnum.ChangeValid:
 					break;
 				case AbilityFieldsEnum.DestinationZone:
+					a.Effects.OfType<ChangeZoneEffect>().LastOrDefault().Destination = CardGroup.ParseZoneName (value);
 					break;
 				case AbilityFieldsEnum.RememberChanged:
 					break;
@@ -1683,6 +1684,14 @@ namespace MagicCrow
 			case "PreventAllDamageBy":
 				break;
 			case "Madness":
+				Trigger trig = new Trigger (
+					MagicEventType.ChangeZone, 
+					new CardTarget (TargetType.Self),
+					new Ability (EffectType.Tap) { });
+				trig.Origine = CardGroupEnum.Hand;
+				trig.Destination = CardGroupEnum.Graveyard;
+				trig.InhibStacking = false;
+				mc.Triggers.Add (trig);
 				break;
 			case "Annihilator":
 				break;
@@ -1847,6 +1856,15 @@ namespace MagicCrow
 					return null;
 				string tmp = ActivationCost.ToString ();
 				return tmp.Split(' ').Where(cc => cc.Length < 3).ToArray();
+			}
+		}
+		public String[] OtherCostElements
+		{
+			get{
+				if (ActivationCost == null)
+					return null;
+				string tmp = ActivationCost.ToString ();
+				return tmp.Split(' ').Where(cc => cc.Length > 3).ToArray();
 			}
 		}
 	}

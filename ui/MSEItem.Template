@@ -1,0 +1,25 @@
+﻿<?xml version="1.0"?>
+<Border Fit="true" Focusable="true">
+	<VerticalStack Height="Fit" Margin="20">
+		<HorizontalStack>
+			<Label Text="{Player}" />
+			<Label Text=" => " />
+			<Label Text="{Title}" />
+		</HorizontalStack>
+		<HorizontalStack>
+			<ListBox Data="{MSECostElements}" Fit="true" 
+					ItemTemplate="#MagicCrow.ui.CostItem.Template"
+					Template="#MagicCrow.ui.ImgList.Template"/>
+			<ListBox Data="{MSEOtherCostElements}">
+				<Template>
+					<HorizontalStack Name="ItemsContainer"/>
+				</Template>
+			</ListBox>
+			<Label Text="{}"/>
+		<!--	<Label Text="{ActivationCost}" />-->
+		<!--	<Label Text="{Description}" Foreground="Blue"/>-->
+			<Label Text="{Message}" />
+		</HorizontalStack>
+	</VerticalStack>
+</Border>
+

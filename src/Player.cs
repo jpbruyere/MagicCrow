@@ -94,6 +94,20 @@ namespace MagicCrow
 		public InPlayGroup InPlay;
 		public CardGroup Exhiled;
 		public CardGroup[] allGroups = new CardGroup[5];
+		public bool[] PhaseStops = new bool[] {
+			false,
+			false,
+			false,
+			true,
+			false,
+			false,
+			false,
+			false,
+			false,
+			false,
+			true,
+			false,
+			false};
 
 		public CardGroup GetGroup(CardGroupEnum zone)
 		{
@@ -118,8 +132,8 @@ namespace MagicCrow
 			Library = new Library();
 
 			Hand = new CardGroup(CardGroupEnum.Hand);
-			Hand.y = -9.0f;
-			Hand.z = 2.2f;
+			Hand.y = -8.0f;
+			Hand.z = 3.2f;
 			Hand.xAngle = Vector3.CalculateAngle (Magic.vLook, Vector3.UnitZ);
 			//Hand.xAngle = 0f;//MathHelper.Pi - Vector3.CalculateAngle (Magic.vLook, Vector3.UnitZ);
 			Hand.HorizontalSpacing = 0.5f;
@@ -159,7 +173,6 @@ namespace MagicCrow
 			set
 			{
 				_deck = value;
-				_deck.Player = this;
 				NotifyValueChange ("Deck", _deck);
 			}
 		}
@@ -284,7 +297,7 @@ namespace MagicCrow
 //			Magic.CurrentGameWin.CrowInterface.AddWidget (playerPanel);
         }
 
-		void PlayerPanel_MouseClick (object sender, Crow.MouseButtonEventArgs e)
+		protected void PlayerPanel_MouseClick (object sender, Crow.MouseButtonEventArgs e)
 		{
 			MagicEngine me = MagicEngine.CurrentEngine;
 			if (me.pp != me.ip)				
@@ -334,8 +347,6 @@ namespace MagicCrow
 				return;
 			}
 			CurrentState = PlayerStates.DeckLoading;
-			ProgressMax = Deck.CardEntries.Count;
-			ProgressValue = 0;
 			Thread thread = new Thread(() => loadingThread());
 			thread.IsBackground = true;
 			thread.Start();
@@ -490,8 +501,8 @@ namespace MagicCrow
 
 			//            if (e.Chrono.ElapsedMilliseconds < MagicEngine.timerLength)
 			//                return;
-			//
-			//            PhaseDone = true;
+			if (e.MagicStack.Count == 0 && !PhaseStops[(int)e.CurrentPhase])
+				PhaseDone = true;
 			//            e.Chrono.Stop();
         }
  

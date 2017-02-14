@@ -1,0 +1,3 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<Label Margin="2" Font="{./Font}" Text="{./Caption}" Foreground="{./Foreground}" Background="{./Background}"/>
+

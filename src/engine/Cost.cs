@@ -22,7 +22,7 @@ namespace MagicCrow
     public class CardCost : Cost
     {
         public int Count = 0;
-        public MultiformAttribut<Target> ValidTargets = new MultiformAttribut<Target>();
+		public MultiformAttribut<Target> validTargets = new MultiformAttribut<Target>();
 
         public CardCost(CostTypes _type)
             : base(_type)
@@ -44,14 +44,14 @@ namespace MagicCrow
 			} else {				
 				cc.Count = int.Parse (tmp [0]);
 			}
-			cc.ValidTargets = CardTarget.ParseTargets (tmp [1]);
+			cc.validTargets = CardTarget.ParseTargets (tmp [1]);
 			if (cc.CostType == CostTypes.Discard) {
-				foreach (CardTarget c in cc.ValidTargets.Values.OfType<CardTarget>()) {
+				foreach (CardTarget c in cc.validTargets.Values.OfType<CardTarget>()) {
 					c.ValidGroup += CardGroupEnum.Hand;
 					c.Controler = ControlerType.You;
 				}
 			} else {
-				foreach (CardTarget c in cc.ValidTargets.Values.OfType<CardTarget>()) {
+				foreach (CardTarget c in cc.validTargets.Values.OfType<CardTarget>()) {
 					c.ValidGroup += CardGroupEnum.InPlay;
 					c.Controler = ControlerType.You;
 				}
@@ -63,14 +63,50 @@ namespace MagicCrow
 		/// </summary>
 		public override Cost Clone ()
 		{
-			return new CardCost (CostType) { Count = Count, ValidTargets = ValidTargets };
+			return new CardCost (CostType) { Count = Count, validTargets = validTargets };
 		}
 		public override string ToString ()
 		{
 			string tmp = CostType.ToString () + Count;
-			if (ValidTargets != null)
-				tmp += ValidTargets.ToString ();
+			if (validTargets != null)
+				tmp += validTargets.ToString ();
 			return tmp;
+		}
+		public override Cost OtherCosts {
+			get { return this; }
+		}
+		public override int RequiredTargetCount { get { return Count; }}
+		public override MultiformAttribut<Target> ValidTargets {
+			get { return validTargets; }
+			set { validTargets = value;	}
+		}
+
+		public override Cost Pay(ref CardInstance ci, CardInstance source){
+			CardCost tmp = this.Clone () as CardCost;
+			if (ValidTargets != null) {
+				foreach (CardTarget t in ValidTargets.Values.OfType<CardTarget>()) {
+					if (t.Accept (ci, source)) {
+						tmp.Count--;
+						if (this.CostType == CostTypes.Discard || this.CostType == CostTypes.Sacrifice )
+							ci.ChangeZone (CardGroupEnum.Graveyard);
+						ci = null;
+						break;
+					}
+				}
+			}else if (this.CostType == CostTypes.Discard) {
+				if (ci.CurrentGroup.GroupName == CardGroupEnum.Hand) {
+					ci.ChangeZone (CardGroupEnum.Graveyard);
+					tmp.Count--;
+					ci = null;
+				}
+			} else if (this.CostType == CostTypes.Sacrifice) {
+				if (ci.CurrentGroup.GroupName == CardGroupEnum.InPlay) {
+					ci.ChangeZone (CardGroupEnum.Graveyard);
+					tmp.Count--;
+					ci = null;
+				}
+			}
+			return tmp.Count == 0 ? null : tmp;
 		}
     }
 	[Serializable]
@@ -396,6 +432,9 @@ namespace MagicCrow
         {
             return this.CostType == ct ? true : false;
         }
+		public virtual Cost Pay(ref CardInstance ci, CardInstance source){			
+			return this;
+		}
         public virtual Cost Pay(ref Cost c)
         {
             Cost result = null;
@@ -442,9 +481,9 @@ namespace MagicCrow
                 case CostTypes.Tap:
                     return "T";
 			case CostTypes.Sacrifice:
-				return "Sacrifice " + (this as CardCost).ValidTargets.ToString();
+				return "Sacrifice " + (this as CardCost).validTargets.ToString();
 			case CostTypes.Discard:
-				return "Discard "+ (this as CardCost).ValidTargets.ToString();
+				return "Discard "+ (this as CardCost).validTargets.ToString();
             }
             return "erreur";
         }
@@ -453,6 +492,18 @@ namespace MagicCrow
 		public virtual ManaTypes GetDominantMana(){
 			return ManaTypes.Any;
 		}
+		public virtual Cost ManaCost {
+			get { return null; }
+		}
+		public virtual Cost OtherCosts {
+			get { return null; }
+		}
+		public virtual int RequiredTargetCount { get { return 0; }}
+		public virtual MultiformAttribut<Target> ValidTargets {
+			get { return null; }
+			set { throw new NotImplementedException(); }
+		}
+
 //		public virtual CardCost[] GetCardCosts ();
 //		public virtual CardCost[] GetCostWithoutCardCosts ();
     }
@@ -493,8 +544,27 @@ namespace MagicCrow
                     return true;
             return false;
         }
+		public override Cost Pay (ref CardInstance ci, CardInstance source)
+		{
+			Costs tmp = new Costs ();
+			int i = 0;
+			while (i < CostList.Count) {
+				Cost res = CostList [i].Pay (ref ci, source);
+				i++;
+				if (res != null)
+					tmp.CostList.Add (res);
+				if (ci == null) {
+					break;
+				}
+			}
+			while (i < CostList.Count) {
+				tmp.CostList.Add (CostList [i].Clone());
+				i++;
+			}
+			return tmp.CostList.Count == 0 ? null : tmp.CostList.Count == 1 ? tmp.CostList [0] : tmp;
+		}
         public override Cost Pay(ref Cost c)
-        {
+        {			
             if (c.CostType == CostTypes.Composite)
             {
                 Costs composite = c as Costs;
@@ -610,7 +680,38 @@ namespace MagicCrow
 			}
 			CostList = manas.OrderBy (m => (m as Mana).TypeOfMana).Concat(others).ToList();
 		}
-
+		public override Cost ManaCost {
+			get {
+				Costs tmp = new Costs() {CostList = CostList.Where (c => c is Mana).ToList()};
+				return tmp.CostList.Count == 0 ? null :
+					tmp.CostList.Count == 1 ? tmp.CostList [0] : tmp;
+			}
+		}
+		public override Cost OtherCosts {
+			get {
+				Costs tmp = new Costs () { CostList = CostList.Where (c => !(c is Mana)).ToList () };
+				return tmp.CostList.Count == 0 ? null :
+					tmp.CostList.Count == 1 ? tmp.CostList [0] : tmp;
+			}
+		}
+		public override int RequiredTargetCount {
+			get {
+				int tmp = 0;
+				foreach (Cost c in CostList)
+					tmp += c.RequiredTargetCount;
+				return tmp;
+			}
+		}
+		public override MultiformAttribut<Target> ValidTargets {
+			get {
+				MultiformAttribut<Target> tmp = new MultiformAttribut<Target> (AttributeType.Composite);
+				foreach (CardCost cc in CostList.OfType<CardCost>()) {
+					tmp += cc.ValidTargets;
+				}
+				return tmp;
+			}
+			set { throw new NotImplementedException (); }
+		}
 		public override ManaTypes GetDominantMana()
 		{
 			IList<Mana> manas = CostList.OfType<Mana> ().

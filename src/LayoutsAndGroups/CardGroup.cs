@@ -141,35 +141,6 @@ namespace MagicCrow
 			Point<float> p = new Point<float> (_p.X, _p.Y);
 			return r.ContainsOrIsEqual (p);
 		}
-		public override void Render ()
-		{
-//			if (IsSelected) {
-//
-//				Magic.glowShader.Enable ();
-//
-//				Magic.glowShader.ProjectionMatrix = Magic.projection;
-//				Magic.glowShader.ModelViewMatrix = Magic.modelview;
-//				Magic.glowShader.ModelMatrix = Matrix4.CreateScale(1.2f) * Transformations;
-//				Magic.glowShader.Color = Crow.Color.Red;
-//				Magic.glowShader.BorderWidth = 0.05f;
-//
-//				GL.BindTexture (TextureTarget.Texture2D, Magic.abstractTex);
-//
-//				GL.Disable(EnableCap.CullFace);
-//
-//				MagicData.CardMesh.Render (BeginMode.TriangleStrip);
-//
-//				GL.Enable(EnableCap.CullFace);
-//
-//				Magic.texturedShader.Enable ();
-//			}
-//			if (DepthTest)
-//				GL.Enable (EnableCap.DepthTest);
-//			else
-//				GL.Disable (EnableCap.DepthTest);
-			
-			base.Render ();
-		}
 		public override string ToString ()
 		{
 			return GroupName.ToString();

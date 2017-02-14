@@ -1,0 +1,50 @@
+﻿<?xml version="1.0"?>
+<Container
+	HorizontalAlignment="Left" VerticalAlignment="Center"
+	Margin="10" Fit="True" >
+	<Group Fit="True">
+		<VerticalStack Spacing="0" Name="Phases">			
+			<Border Style="phaseBut" Name="Untap" MouseClick = "onPhaseClick">
+				<Image Style="phaseImg" Opacity="{UntapOpacity}" Path="#MagicCrow.images.phaseIcons.icon_phase_untap.svg"/>
+			</Border>
+			<Border Style="phaseBut" Name="Upkeep" MouseClick = "onPhaseClick">
+				<Image Style="phaseImg" Opacity="{UpkeepOpacity}" Path="#MagicCrow.images.phaseIcons.icon_phase_upkeep.svg"/>
+			</Border>
+			<Border Style="phaseBut" Name="Draw" MouseClick = "onPhaseClick">
+				<Image Style="phaseImg" Opacity="{DrawOpacity}" Path="#MagicCrow.images.phaseIcons.icon_phase_draw.svg"/>
+			</Border>
+			<Border Style="phaseBut" Name="Main1" MouseClick = "onPhaseClick">
+				<Image Style="phaseImg" Opacity="{Main1Opacity}" Path="#MagicCrow.images.phaseIcons.icon_phase_main1.svg"/>
+			</Border>
+			<Border Style="phaseBut" Name="BeforeCombat" MouseClick = "onPhaseClick">
+				<Image Style="phaseImg" Opacity="{BeforeCombatOpacity}" Path="#MagicCrow.images.phaseIcons.icon_phase_combat_start.svg"/>
+			</Border>
+			<Border Style="phaseBut" Name="DeclareAttacker" MouseClick = "onPhaseClick">
+				<Image Style="phaseImg" Opacity="{DeclareAttackerOpacity}" Path="#MagicCrow.images.phaseIcons.icon_phase_combat_attackers.svg"/>
+			</Border>
+			<Border Style="phaseBut" Name="DeclareBlocker" MouseClick = "onPhaseClick">
+				<Image Style="phaseImg" Opacity="{DeclareBlockerOpacity}" Path="#MagicCrow.images.phaseIcons.icon_phase_combat_blockers.svg"/>
+			</Border>
+			<Border Visible="false" Style="phaseBut" Name="FirstStrikeDame" MouseClick = "onPhaseClick">
+				<Image Style="phaseImg" Opacity="{FirstStrikeDameOpacity}" Path="#MagicCrow.images.phaseIcons.icon_phase_combat_damage.svg"/>
+			</Border>
+			<Border Style="phaseBut" Name="CombatDamage" MouseClick = "onPhaseClick">
+				<Image Style="phaseImg" Opacity="{CombatDamageOpacity}" Path="#MagicCrow.images.phaseIcons.icon_phase_combat_damage.svg"/>
+			</Border>
+			<Border Style="phaseBut" Name="EndOfCombat" MouseClick = "onPhaseClick">
+				<Image Style="phaseImg" Opacity="{EndOfCombatOpacity}" Path="#MagicCrow.images.phaseIcons.icon_phase_combat_end.svg"/>
+			</Border>
+			<Border Style="phaseBut" Name="Main2" MouseClick = "onPhaseClick">
+				<Image Style="phaseImg" Opacity="{Main2Opacity}" Path="#MagicCrow.images.phaseIcons.icon_phase_main2.svg"/>
+			</Border>
+			<Border Style="phaseBut" Name="EndOfTurn" MouseClick = "onPhaseClick">
+				<Image Style="phaseImg" Opacity="{EndOfTurnOpacity}" Path="#MagicCrow.images.phaseIcons.icon_phase_cleanup.svg"/>
+			</Border>
+			<Border Style="phaseBut" Name="CleanUp" MouseClick = "onPhaseClick">
+				<Image Style="phaseImg" Opacity="{CleanUpOpacity}" Path="#MagicCrow.images.phaseIcons.icon_phase_nextturn.svg"/>
+			</Border>
+		</VerticalStack>
+<!--		<Image Name="PhaseOverlay" Width="40" Height="40" 
+				Path="image2/PhaseOverlay.svg"/>-->
+	</Group>
+</Container>

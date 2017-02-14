@@ -43,8 +43,6 @@ namespace MagicCrow
 			}
 
 		}
-
-		public abstract void Render ();
 			
 		public abstract void UpdateLayout (bool anim = true);
 		public abstract void toogleShowAll ();

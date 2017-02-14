@@ -53,6 +53,24 @@ namespace MagicCrow
 		}
 		#endregion
 
+		void ActionDone_MouseClick (object sender, Crow.MouseButtonEventArgs e)
+		{			
+			if (NextActionOnStack != null) {
+				NextActionOnStack.Validate ();
+			} else if (UIActionIsChoice) {
+				PopMSE ();
+			}
+
+			//MagicEngine.CurrentEngine.CancelLastActionOnStack ();
+		}
+		void onChoiceMade (object sender, SelectionChangeEventArgs e)
+		{
+			if (e.NewValue == null)
+				return;
+			PopMSE ();
+			PushOnStack (e.NewValue as MagicStackElement);
+		}
+
 		#region Stack managment
 		public MagicAction NextActionOnStack {
 			get { return this.Count == 0 ? null :
@@ -122,7 +140,7 @@ namespace MagicCrow
 			NotifyValueChanged ("UIPlayerTitle", UIPlayerTitle);
 			NotifyValueChanged ("UIPlayerMessage", UIPlayerMessage);
 			NotifyValueChanged ("CostElements", CostElements);
-			NotifyValueChanged ("MSEOtherCostElements", OtherCostElements);
+			NotifyValueChanged ("OtherCostElements", OtherCostElements);
 			NotifyValueChanged ("CostIsNotNull", CostIsNotNull);
 			NotifyValueChanged ("MessageIsNotNull", MessageIsNotNull);
 			NotifyValueChanged ("UIActionIsChoice", UIActionIsChoice);
@@ -180,7 +198,7 @@ namespace MagicCrow
 
 					MagicAction ma = PopMSE() as MagicAction;
 
-					UpdateStackLayouting ();
+					//UpdateStackLayouting ();
 
 					ma.Resolve ();
 
@@ -210,20 +228,27 @@ namespace MagicCrow
 				if (ma.CardSource.Controler != engine.pp)
 					return;
 			}
-			Magic.CurrentGameWin.CursorVisible = true;
+			//Magic.CurrentGameWin.CursorVisible = true;
 			if (!ma.IsComplete) {
 				if (ma.remainingCost == CostTypes.Tap) {
 					ma.remainingCost = null;
 					ma.CardSource.Tap ();
-				} else if ((engine.pp.AvailableManaOnTable + engine.pp.ManaPool) < ma.remainingCost) {
+				} else if ((engine.pp.AvailableManaOnTable + engine.pp.ManaPool) < ma.RemainingCost?.ManaCost) {
 					Magic.AddLog ("Not enough mana available");
 					CancelLastActionOnStack ();
 					return;
-				} else if (engine.pp.ManaPool != null && ma.RemainingCost != null) {
+				} else if (engine.pp.ManaPool != null && ma.RemainingCost?.ManaCost != null) {
+					string lastRemCost = ma.RemainingCost.ToString ();
 					ma.PayCost (ref engine.pp.ManaPool);
-					engine.pp.NotifyValueChange ("ManaPoolElements", engine.pp.ManaPoolElements);
-					engine.pp.UpdateUi ();
-					notifyStackElementChange ();
+					bool skipUpdateUI = false;
+					if (ma.RemainingCost != null) {
+						if (string.Equals (ma.RemainingCost.ToString (), lastRemCost, StringComparison.Ordinal))
+							skipUpdateUI = true;
+					}
+					if (!skipUpdateUI){
+						engine.pp.NotifyValueChange ("ManaPoolElements", engine.pp.ManaPoolElements);
+						notifyStackElementChange ();
+					}
 				}
 
 				//				if (ma.IsComplete && ma.GoesOnStack)
@@ -233,7 +258,7 @@ namespace MagicCrow
 			if (ma.IsComplete){
 				if (ma.GoesOnStack) {
 					//should show spell to player...
-					UpdateStackLayouting();
+					//UpdateStackLayouting();
 					engine.GivePriorityToNextPlayer ();				
 				} else {
 					PopMSE ();
@@ -257,7 +282,7 @@ namespace MagicCrow
 		}
 		public bool TryToHandleClick(Object target)
 		{
-			Magic.CurrentGameWin.CursorVisible = true;
+			//Magic.CurrentGameWin.CursorVisible = true;
 			MagicAction ma = NextActionOnStack;
 			if (ma != null) {
 				if (!ma.IsComplete) {

@@ -3,6 +3,11 @@
 	<ListBox Data="{CostElements}" Fit="true" 
 			ItemTemplate="#MagicCrow.ui.CostItem.Template"
 			Template="#MagicCrow.ui.ImgList.Template"/>
+	<ListBox Data="{OtherCostElements}" Fit="true">
+		<Template>
+			<HorizontalStack Name="ItemsContainer"/>
+		</Template>
+	</ListBox>
 <!--	<Label Text="{}"/>-->
 <!--	<Label Text="{ActivationCost}" />-->
 	<Label Text="{Description}" />

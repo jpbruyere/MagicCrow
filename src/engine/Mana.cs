@@ -271,6 +271,9 @@ namespace MagicCrow
 		{
 			return TypeOfMana;
 		}
+		public override Cost ManaCost {
+			get { return this; }
+		}
     		
 	}
 }

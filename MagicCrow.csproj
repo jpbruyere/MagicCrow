@@ -72,6 +72,7 @@
     <Folder Include="images\" />
     <Folder Include="images\expansions\" />
     <Folder Include="shaders\" />
+    <Folder Include="images\phaseIcons\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="lib\Crow\Tests\CrowWindow.cs">
@@ -93,7 +94,6 @@
       <Link>src\crowOTK\vaoMesh.cs</Link>
     </Compile>
     <Compile Include="src\MainWin.cs" />
-    <Compile Include="src\Deck.cs" />
     <Compile Include="src\MagicCard.cs" />
     <Compile Include="src\MagicData.cs" />
     <Compile Include="src\engine\Abilities.cs" />
@@ -147,6 +147,8 @@
     <Compile Include="src\divers\ExtentionMethods.cs" />
     <Compile Include="shaders\MultiShader.cs" />
     <Compile Include="src\RenderCache.cs" />
+    <Compile Include="src\Deck.cs" />
+    <Compile Include="src\TextScrollerWidget.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ui\mainMenu.iml" />
@@ -345,6 +347,41 @@
     <EmbeddedResource Include="ui\player.iml" />
     <EmbeddedResource Include="ui\engine.iml" />
     <EmbeddedResource Include="ui\keepOrMuligan.iml" />
+    <EmbeddedResource Include="ui\MagicStack.iml" />
+    <EmbeddedResource Include="ui\cardView.iml" />
+    <EmbeddedResource Include="ui\StaticAbItem.Template" />
+    <EmbeddedResource Include="images\abilities.svg" />
+    <EmbeddedResource Include="ui\MSEItem.Template" />
+    <EmbeddedResource Include="ui\MagicStackView.iml" />
+    <EmbeddedResource Include="ui\cardInstanceView.iml" />
+    <EmbeddedResource Include="ui\magic.style" />
+    <EmbeddedResource Include="ui\ColoredCheckBox.template" />
+    <EmbeddedResource Include="ui\log.iml" />
+    <EmbeddedResource Include="ui\Window.template" />
+    <EmbeddedResource Include="ui\phases.iml" />
+    <EmbeddedResource Include="images\phaseIcons\icon_phase_cleanup.svg" />
+    <EmbeddedResource Include="images\phaseIcons\icon_phase_combat_attackers.svg" />
+    <EmbeddedResource Include="images\phaseIcons\icon_phase_combat_blockers.svg" />
+    <EmbeddedResource Include="images\phaseIcons\icon_phase_combat_damage.svg" />
+    <EmbeddedResource Include="images\phaseIcons\icon_phase_combat_end.svg" />
+    <EmbeddedResource Include="images\phaseIcons\icon_phase_combat_start.svg" />
+    <EmbeddedResource Include="images\phaseIcons\icon_phase_draw.svg" />
+    <EmbeddedResource Include="images\phaseIcons\icon_phase_main1.svg" />
+    <EmbeddedResource Include="images\phaseIcons\icon_phase_main2.svg" />
+    <EmbeddedResource Include="images\phaseIcons\icon_phase_nextturn.svg" />
+    <EmbeddedResource Include="images\phaseIcons\icon_phase_untap.svg" />
+    <EmbeddedResource Include="images\phaseIcons\icon_phase_upkeep.svg" />
+    <EmbeddedResource Include="shaders\lava.frag" />
+    <EmbeddedResource Include="shaders\water.frag" />
+    <EmbeddedResource Include="shaders\particules.frag" />
+    <EmbeddedResource Include="shaders\height.frag" />
+    <EmbeddedResource Include="shaders\colorBlast.frag" />
+    <EmbeddedResource Include="shaders\colorCircle.frag" />
+    <EmbeddedResource Include="shaders\lightingStrike.frag" />
+    <EmbeddedResource Include="shaders\simpleFilledCircle.frag" />
+    <EmbeddedResource Include="shaders\fireCircle.frag" />
+    <EmbeddedResource Include="shaders\colorWheel.frag" />
+    <EmbeddedResource Include="shaders\water2.frag" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cardsfolder.zip">

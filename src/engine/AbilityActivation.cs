@@ -28,7 +28,7 @@ namespace MagicCrow
 	public class AbilityActivation : MagicAction
 	{
 		#region CTOR
-		public AbilityActivation(CardInstance _source, Ability a) : base(_source)
+		public AbilityActivation(CardInstance _source, Ability a, bool isInChoice = false) : base(_source)
 		{
 			Source = a;
 			if (!Cost.IsNullOrCountIsZero (Source.ActivationCost)) {
@@ -39,7 +39,7 @@ namespace MagicCrow
 			//			else//if it's a spell ab, no cost and no message
 			//				return;
 
-			if (CardSource != null) {
+			if (CardSource != null && !isInChoice) {
 				if (Source.Mandatory)
 					Magic.AddLog (CardSource.Model.Name + " ability activation.");
 				else
@@ -145,8 +145,17 @@ namespace MagicCrow
 		}
 		public override bool TryToAddTarget (object target)
 		{
-			if (!WaitForTarget)
+			if (!WaitForTarget) {
+				if (RemainingCost != null) {
+					if (RemainingCost.RequiredTargetCount > 0 && target is CardInstance) {
+						CardInstance cat = target as CardInstance;
+						RemainingCost = RemainingCost.Pay (ref cat, CardSource);
+						if (cat == null)
+							return true;
+					}
+				}
 				return false;
+			}
 
 			if (target is CardInstance) {
 				CardInstance ci = target as CardInstance;

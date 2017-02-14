@@ -24,7 +24,7 @@ namespace MagicCrow
     {
 		//TODO:fix data links
         
-                
+		public bool configOk = false;
 		public string RawCardData;
 
 		public string FilePath;
@@ -53,6 +53,9 @@ namespace MagicCrow
         public string DeckHints = "";
 
         public string picturePath = "";
+		public int nbrImg = 1;
+		public bool Alternate = false;
+
         public string picFileNameWithoutExtension
         {
             get
@@ -62,43 +65,6 @@ namespace MagicCrow
                 return f[0];
             }
         }
-
-        public bool Alternate = false;
-
-        [NonSerialized]
-		Dictionary<String, int[]> textures = new Dictionary<string, int[]>();        
-        public int nbrImg = 1;
-
-		public void SetTexture(string _path)
-        {
-			UnloadTextures ();
-			if (File.Exists(_path))
-			{
-				textures[""] = new int[1];
-				textures[""][0] = CreateTexture(_path);  
-			}
-        }
-			
-		public void Render(string edition = "", int selectedTexIdx = 0)
-        {
-			if (!textures.ContainsKey (edition)) {
-				loadTextures (edition);
-
-			}
-				
-			GL.CullFace(CullFaceMode.Front);
-            GL.BindTexture(TextureTarget.Texture2D, MagicData.CardBack);
-			MagicData.CardMesh.Render (BeginMode.TriangleStrip);
-
-			//Magic.texturedShader.ModelMatrix = Matrix4.CreateRotationY (MathHelper.Pi) * Magic.texturedShader.ModelMatrix;
-
-			GL.CullFace(CullFaceMode.Back);
-            GL.BindTexture(TextureTarget.Texture2D, textures[edition][selectedTexIdx]);
-			MagicData.CardMesh.Render (BeginMode.TriangleStrip);
-
-			GL.BindTexture(TextureTarget.Texture2D, 0);
-        }
-
 		public string ImagePath {
 			get {
 				string basePath = System.IO.Path.Combine (MagicData.cardsArtPath, "cards");
@@ -116,67 +82,30 @@ namespace MagicCrow
 				return tmp.Split(' ').Where(cc => cc.Length < 3).ToArray();
 			}
 		}
-		public bool IsCreature { get { return Types == CardTypes.Creature; } }
-
-        public bool DownloadingTextureInProgress = false;
-        public int DownloadingTryCount = 0;
-		void loadTextures(string edition = "")
-        {
-            if (DownloadingTextureInProgress || DownloadingTryCount > 3)
-                return;
-				            
-			string basePath = System.IO.Path.Combine (MagicData.cardsArtPath, "cards");
-			string editionPicsPath = System.IO.Path.Combine (basePath, edition);
-
-			if (Directory.Exists (editionPicsPath))
-				basePath = editionPicsPath;
-			
-			textures[edition] = new int[nbrImg];
-
-			bool texturesFound = false;
-            for (int i = 0; i < nbrImg; i++)
-            {
-                string f = "";
-                if (nbrImg == 1)
-                    f = Directory.GetFiles(basePath, Name + ".full.jpg").FirstOrDefault();
-                else
-                    f = Directory.GetFiles(basePath, Name + (i + 1) + ".full.jpg").FirstOrDefault();
-
-                if (File.Exists(f))
-                {
-					texturesFound = true;
-					textures[edition][i] = CreateTexture(f);                        
-                }
-            }                
-
-			if (texturesFound)
-				return;
-			
-            if (!MagicData.MissingPicToDownload.Contains(this))
-                MagicData.MissingPicToDownload.Add(this);
-        }
-        public void UnloadTextures()
-        {
-            if (textures == null)
-                return;
-
-			foreach (int[] texs in textures.Values) {
-				for (int i = 0; i < nbrImg; i++)
-				{
-					int tex = texs[i];
-					if (tex > 0)
-						GL.DeleteTextures(1, ref tex);
-				}
+		public bool IsOk { 
+			get { return configOk; }
+			set {
+				if (configOk == value)
+					return;
+				configOk = value;
 			}
-        }
-        public int CreateTexture(string file)
-        {
-			GGL.Texture t = new GGL.Texture(file);
-            //updateGraphic(file);
-            return t;        
-        }
-			
-        void updateGraphic(string file)
+		}
+		public bool IsCreature { get { return Types == CardTypes.Creature; } }
+		public Ability[] StaticAbilities {
+			get { return Abilities.Where (a => a.IsStaticAbility).ToArray(); }
+		}
+		public Ability[] TriggeredAbilities {
+			get { return Abilities.Where (a => a.IsTriggeredAbility).ToArray(); }
+		}
+		public Ability[] ActivatedAbilities {
+			get { return Abilities.Where (a => a.IsActivatedAbility).ToArray(); }
+		}
+
+
+        [NonSerialized]public bool DownloadingTextureInProgress = false;
+		[NonSerialized]public int DownloadingTryCount = 0;
+
+		void updateGraphic(string file)
         {
             int width = 100;
             int height = 15;
@@ -229,8 +158,7 @@ namespace MagicCrow
             bmp.UnlockBits(data);
 
         }
-			
-  
+
         public string colorComponentInPicName
         {
             get
@@ -257,8 +185,51 @@ namespace MagicCrow
         }
 
 		void onSaveInCache (object sender, MouseButtonEventArgs e)
-		{
+		{			
 			MagicData.CacheCard (this);
+		}
+		void onReparse (object sender, MouseButtonEventArgs e)
+		{						
+			MagicCard c = this;
+			string n = Name;
+			reset ();
+			if (!MagicData.TryGetCardFromZip (n, ref c)) {
+				Debug.WriteLine ("DCK: {0} => Card not found: {1}", Name, n);
+				return;
+			}
+		}
+		void reset(){
+			configOk = false;
+			RawCardData = "";
+
+			FilePath = "";
+			Name = "";
+			Cost = null;
+			Types = new MultiformAttribut<CardTypes>();
+			Abilities = new List<Ability>();
+			Triggers = new List<Trigger>();
+			SpellEffects = new List<EffectGroup> ();
+			Konstrains = new List<string>();
+			R = new List<string>();
+			DeckNeeds = new List<string>();
+			TextField = new List<string>();
+			Comments = new List<string>();        
+
+			Oracle = "";
+
+			Power = 0;
+			Toughness = 0;        
+
+			S = "";
+			AlternateMode = "";
+			Colors = null;
+			Loyalty = "";
+			HandLifeModifier = "";
+			DeckHints = "";
+
+			picturePath = "";
+			nbrImg = 1;
+			Alternate = false;			
 		}
     }
 

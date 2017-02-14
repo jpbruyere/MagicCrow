@@ -12,148 +12,37 @@ using GGL;
 
 namespace MagicCrow
 {
-    [Serializable]
-	public class Deck : IValueChange
-    {
-		#region IValueChange implementation
-
-		public event EventHandler<ValueChangeEventArgs> ValueChanged;
-		void notifyValueChange(string propName, object newValue)
+	[Serializable]
+	public class DeckFile
+	{
+		enum parserState
 		{
-			ValueChanged.Raise(this, new ValueChangeEventArgs (propName, newValue));
+			init,
+			shop,
+			metadata,
+			main,
+			sideboard,
 		}
 
-		#endregion
+		List<MainLine> cardLines;
 
-        public static Dictionary<string, Deck> PreconstructedDecks = new Dictionary<string, Deck>(StringComparer.OrdinalIgnoreCase);
-        
-        //metadata
+		//metadata
 		public string Name = "unamed";
 		public string DeckType = "";
 		public string Description = "";
 		public string Set = "";
 		public string Image = "";
+		//shop
+		public int Credits = 0;
+		public int MinDifficulty = 0;
+		public int MaxDifficulty = 0;
 
-		public string ImgSetPath {
-			get {
-				return "#MagicCrow.images.expansions." + Set + ".svg";
-			}
-		}
-			
-        //shop
-        public int Credits = 0;
-        public int MinDifficulty = 0;
-        public int MaxDifficulty = 0;
+		public string ImgSetPath { get { return "#MagicCrow.images.expansions." + Set + ".svg";	}}
 
-        public List<CardInstance> Cards = new List<CardInstance>();
-        public Player Player;
+		public IList CardEntries { get { return cardLines;}}
 
-		public CardInstance AddCard(MagicCard mc, string edition = "")
-        {
-			CardInstance tmp = new CardInstance (mc) { Edition = edition };
-            Cards.Add(tmp);
-			return tmp;
-        }
-
-        public void ResetCardStates()
-        {
-
-        }
-		public bool HasAnimatedCards
-		{
-			get {
-				return 
-					Animation.AnimationList.Select (al => al.AnimatedInstance).
-					OfType<CardInstance> ().Where (c => c.Controler == this.Player).Count() > 0 ?
-					true : false;
-			}
-		}
-        enum parserState
-        {
-            init,
-            shop,
-            metadata,
-            main,
-            sideboard,
-        }
-		public string[] CardImages {
-			get {
-				string basePath = System.IO.Path.Combine (MagicData.cardsArtPath, "cards");
-
-				List<string> tmp = new List<string> ();
-
-//				foreach (MainLine ce in CardEntries) {
-//					
-//					string editionPicsPath = System.IO.Path.Combine (basePath, ce.code);
-//
-//					if (Directory.Exists (editionPicsPath))
-//						basePath = editionPicsPath;
-//
-//					textures[edition] = new int[nbrImg];
-//
-//					bool texturesFound = false;
-//					for (int i = 0; i < nbrImg; i++)
-//					{
-//						string f = "";
-//						if (nbrImg == 1)
-//							f = Directory.GetFiles(basePath, Name + ".full.jpg").FirstOrDefault();
-//						else
-//							f = Directory.GetFiles(basePath, Name + (i + 1) + ".full.jpg").FirstOrDefault();
-//
-//						if (File.Exists(f))
-//						{
-//							texturesFound = true;
-//							textures[edition][i] = CreateTexture(f);                        
-//						}
-//					}                					
-//				}
-				return tmp.ToArray();
-			}
-		}
-		public void LoadCards()
-		{
-			foreach (MainLine l in CardEntries) {
-				MagicCard c = null;
-				if (!MagicData.TryGetCardFromCache (l.name, ref c)) {
-					if (!MagicData.TryGetCardFromZip (l.name, ref c)) {
-						Debug.WriteLine ("DCK: {0} => Card not found: {1}", Name, l.name);
-						return;
-					}
-				}
-				for (int i = 0; i < l.count; i++) {
-					AddCard (c, l.code);
-				}
-				Player.ProgressValue++;
-//				lock (Player.pgBar) {
-//					Player.pgBar.Value++;
-//				}
-			}
-		}
-		public void LoadNextCardsData()
-		{
-			MainLine l = cardLines.Dequeue();
-			MagicCard c = null;
-			if (!MagicData.TryGetCardFromCache (l.name, ref c)) {
-				if (!MagicData.TryGetCardFromZip (l.name, ref c)) {
-					Debug.WriteLine ("DCK: {0} => Card not found: {1}", Name, l.name);
-					return;
-				}
-			}
-			for (int i = 0; i < l.count; i++)
-				AddCard(c);
-		}
-		public int CardCount {
-			get { return cardLines == null ?
-				Cards == null ? 0 : Cards.Count : cardLines.Count; }
-		}
-		public IList CardEntries {
-			get { return cardLines.ToList ();}
-		}
-		Queue<MainLine> cardLines;
-		public static Deck PreLoadDeck(string path)
-		{
-			Deck d = new Deck();
-			d.cardLines = new Queue<MainLine> ();
+		public DeckFile(string path){
+			cardLines = new List<MainLine> ();
 			parserState state = parserState.init;
 
 			using (Stream s = new FileStream(path, FileMode.Open))
@@ -195,19 +84,19 @@ namespace MagicCrow
 							switch (tokens[0].ToLower())
 							{
 							case "name":
-								d.Name = tokens[1];
+								Name = tokens[1];
 								break;
 							case "description":
-								d.Description = tokens[1];
+								Description = tokens[1];
 								break;
 							case "set":
-								d.Set = tokens[1];
+								Set = tokens[1];
 								break;
 							case "Image":
-								d.Image = tokens[1];
+								Image = tokens[1];
 								break;
 							case "deck type":
-								d.DeckType = tokens[1];
+								DeckType = tokens[1];
 								break;
 							default:
 								break;
@@ -227,8 +116,7 @@ namespace MagicCrow
 							if (ts.Length > 1)
 								l.code = ts [1];
 
-							//List<MagicCard> lmc = MagicCard.cardDatabase.Values.ToList().Where(c => c.Name.StartsWith("Faith", StringComparison.OrdinalIgnoreCase)).ToList();
-							d.cardLines.Enqueue (l);
+							cardLines.Add (l);
 							break;
 						case parserState.sideboard:
 							break;
@@ -238,10 +126,8 @@ namespace MagicCrow
 					}
 				}
 			}
-
-			//PreconstructedDecks.Add(d.Name,d);
-			return d;
 		}
+
 		public void CacheAllCards(){
 			foreach (MainLine l in CardEntries) {
 				MagicCard c = null;
@@ -252,12 +138,63 @@ namespace MagicCrow
 				MagicData.CacheCard (c);
 			}
 		}
-			
+
 		public override string ToString ()
 		{
 			return Name;
 		}
-    }
+	}
+
+	public class Deck
+	{
+		public List<CardInstance> Cards = new List<CardInstance>();
+		public Player Player;
+
+		public Deck(){			
+		}
+		DeckFile inputDck = null;
+
+		public Deck(DeckFile df, Player player){
+			Player = player;
+			player.Deck = this;
+			inputDck = df;
+			Player.ProgressMax = inputDck.CardEntries.Count;
+			Player.ProgressValue = 0;
+		}
+		public void LoadCards(){
+			foreach (MainLine l in inputDck.CardEntries) {
+				MagicCard c = null;
+				if (!MagicData.TryGetCardFromCache (l.name, ref c)) {
+					if (!MagicData.TryGetCardFromZip (l.name, ref c)) {
+						Debug.WriteLine ("DCK: {0} => Card not found: {1}", inputDck.Name, l.name);
+						return;
+					}
+				}
+				for (int i = 0; i < l.count; i++) {
+					AddCard (c, l.code);
+				}
+				Player.ProgressValue++;
+			}			
+			inputDck = null;
+		}
+		public CardInstance AddCard(MagicCard mc, string edition = "")
+		{
+			CardInstance tmp = new CardInstance (mc) { Edition = edition };
+			Cards.Add(tmp);
+			return tmp;
+		}
+
+		public bool HasAnimatedCards
+		{
+			get {
+				return 
+					Animation.AnimationList.Select (al => al.AnimatedInstance).
+					OfType<CardInstance> ().Where (c => c.Controler == this.Player).Count() > 0 ?
+					true : false;
+			}
+		}
+
+	}
 	class MainLine
 	{
 		public int count = 0;

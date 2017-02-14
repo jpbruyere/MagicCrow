@@ -1,0 +1,23 @@
+﻿ColoredCheckBox {
+	Template= #MagicCrow.ui.ColoredCheckBox.template;
+	Background = Onyx;
+	Foreground = Gray;
+	Checked = {Background=Mantis;Foreground=White};
+	Unchecked = {Background=Onyx;Foreground=Gray};
+	Width=Fit;
+	Height=Fit;
+}
+phaseBut {
+	Focusable = true;
+	CornerRadius = 5;
+	Foreground = Transparent;
+	BorderWidth = 2;
+	Margin = 2;
+	Width = 40;
+	Height = 40;
+	MouseEnter = {Background = UnmellowYellow}
+	MouseLeave = {Background = Transparent}
+}
+phaseImg {
+	Opacity = 0.35;
+}

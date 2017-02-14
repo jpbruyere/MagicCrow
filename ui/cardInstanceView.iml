@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<Window Caption="Card instance" Height="70%" Width="260" Background="0.1,0.1,0.1,0.4">
+	<Border BorderWidth="1" Margin="10" DataSource="{SelectedCardInstance}">
+		<VerticalStack Margin="2" >			
+			<HorizontalStack Height="Fit" Margin="5">			
+				<Label Text="{Name}" Font="MagicMedieval bold, 16" Width="Stretched" />
+					<ListBox Data="{CostElements}" Fit="true"
+						ItemTemplate="#MagicCrow.ui.CostItem.Template"
+						Template="#MagicCrow.ui.ImgList.Template"/>
+				<GraphicObject Width="5"/>
+			</HorizontalStack>
+			<HorizontalStack Height="Fit">
+				<Label Text="VBO index:"/>
+				<Label Text="{instanceIdx}" Background="DarkRed" Margin="2" Font="droid bold, 12"/>
+			</HorizontalStack>
+			<HorizontalStack Height="Fit">
+				<Label Text="CurrentGroup:"/>
+				<Label Text="{CurrentGroup}"/>
+			</HorizontalStack>
+			<HorizontalStack Height="Fit">
+				<Label Text="Controler:"/>
+				<Label Text="{Controler}"/>
+			</HorizontalStack>
+			<HorizontalStack Height="Fit" Background="Onyx" Margin="2">
+				<Label Text="X:" Foreground="LightGray"/>
+				<Label Text="{x}"/>
+				<GraphicObject Width="5"/>
+				<Label Text="Y:" Foreground="LightGray"/>
+				<Label Text="{y}"/>
+				<GraphicObject Width="5"/>
+				<Label Text="Z:" Foreground="LightGray"/>
+				<Label Text="{z}"/>
+			</HorizontalStack>
+			<HorizontalStack Height="Fit" Background="Onyx" Margin="2">
+				<Label Text="X Angle:" Foreground="LightGray"/>
+				<Label Text="{xAngle}"/>
+				<GraphicObject Width="5"/>
+				<Label Text="Y Angle:" Foreground="LightGray"/>
+				<Label Text="{yAngle}"/>
+				<GraphicObject Width="5"/>
+				<Label Text="Z Angle:" Foreground="LightGray"/>
+				<Label Text="{zAngle}"/>
+			</HorizontalStack>
+			<HorizontalStack Height="Fit">
+				<Label Text="Strength:"/>
+				<Label Text="{Power}" Font="droid bold, 14"/>
+				<Label Text="/" Font="droid bold, 12" />
+				<Label Text="{Toughness}" Font="droid bold, 14" />
+			</HorizontalStack>
+			<Wrapper Orientation="Vertical" Width="Stretched" Height="Fit">
+				<CheckBox Style="ColoredCheckBox" Caption="IsTapped" IsChecked="{IsTapped}"/>
+				<CheckBox Style="ColoredCheckBox" Caption="Combating" IsChecked="{CanAttack}"/>
+				<CheckBox Style="ColoredCheckBox" Caption="HasFocus" IsChecked="{HasFocus}"/>
+				<CheckBox Style="ColoredCheckBox" Caption="HasSummoningSickness" IsChecked="{HasSummoningSickness}"/>
+				<CheckBox Style="ColoredCheckBox" Caption="IsToken" IsChecked="{IsToken}"/>
+				<CheckBox Style="ColoredCheckBox" Caption="Kicked" IsChecked="{Kicked}"/>
+				<CheckBox Style="ColoredCheckBox" Caption="CanAttack" IsChecked="{CanAttack}"/>
+			</Wrapper>
+			<ListBox Data="{Effects}" Height="Fit">
+				<Template>
+					<GroupBox Caption="Effects" MinimumSize="1,1" >
+						<VerticalStack Name="ItemsContainer"/>
+					</GroupBox>
+				</Template>
+			</ListBox>
+			<ListBox Data="{BlockingCreatures}" Height="Fit">
+				<Template>
+					<GroupBox Caption="BlockingCreature" MinimumSize="1,1" >
+						<VerticalStack Name="ItemsContainer"/>
+					</GroupBox>
+				</Template>
+			</ListBox>
+			<ListBox Data="{Damages}" Height="Fit">
+				<Template>
+					<GroupBox Caption="Damages" MinimumSize="1,1" >
+						<VerticalStack Name="ItemsContainer"/>
+					</GroupBox>
+				</Template>
+			</ListBox>
+		</VerticalStack>
+	</Border>	
+</Window>
+

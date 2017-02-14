@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="UTF-8" ?>
-<MessageBox Message="Would you like to take a mulligan?" Background="Jet"
+<MessageBox Message="Would you like to take a mulligan?" Background="0.2,0.2,0.2,0.7" Width="50%" Height="20%"
 	Ok="OnTakeMulligan"
 	Cancel="OnKeep">
 	<Template>
@@ -7,7 +7,7 @@
 			<VerticalStack Background="{./Background}">
 				<HorizontalStack Margin="5">
 					<Image Name="Image" Width="20%" Height="20" Path="#Crow.Images.Icons.iconInfo.svg" />
-					<Label Margin="5" Font="serif, 10" Width="80%" Text="{./Message}"
+					<Label Margin="5" Font="serif, 16" Width="80%" Text="{./Message}"
 						TextAlignment="Left"
 						Multiline="true" />		
 				</HorizontalStack>

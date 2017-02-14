@@ -37,6 +37,7 @@ namespace MagicCrow
 			foreach (T i in list)
 				AddValue (i);
 		}
+		public MultiformAttribut(){}
 
 		MultiformAttribut<T> Clone
 		{
@@ -95,6 +96,16 @@ namespace MagicCrow
 				return null;
 
         }
+		public static MultiformAttribut<T> operator +(MultiformAttribut<T> ma1, MultiformAttribut<T> ma2)
+		{
+			if (ma1 == null)
+				return ma2;
+			if (ma2 == null)
+				return ma1;
+			if (ma1.attributeType != ma2.attributeType)
+				throw new Exception ("incompatible multiform attribute");
+			return new MultiformAttribut<T> (ma1.attributeType, ma1.Values.Concat (ma2.Values).ToArray());
+		}
 
 //		public static MultiformAttribut<T> operator +(T a, MultiformAttribut<T> ma)
 //		{
@@ -187,6 +198,8 @@ namespace MagicCrow
 		public static bool operator >=(MultiformAttribut<T> a1, MultiformAttribut<T> a2){
 			if (a2 == null)
 				return true;
+			if (a1 == null)
+				return false;
 			foreach (T j in a2.Values) {
 				if (!a1.Contains (j))
 					return false;

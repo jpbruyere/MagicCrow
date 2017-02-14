@@ -1,0 +1,10 @@
+﻿<?xml version="1.0"?>
+<Window Height="50%" Width="20%" HorizontalAlignment="Right" VerticalAlignment="Bottom">
+	<VerticalStack>
+		<Button Caption="Cancel Last Action" MouseClick="onCancelLastClick"/>
+		<ListBox Data="{MagicStack}"
+			ItemTemplate="#MagicCrow.ui.MSEItem.Template">
+		</ListBox>
+	</VerticalStack>
+</Window>
+

@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="UTF-8" ?>
-<Border BorderWidth="2"	CornerRadius="10" Width="50%" Height="60%" Background="Onyx">
+<Border BorderWidth="2"	CornerRadius="10" Width="50%" Height="60%" Background="0.2,0.2,0.2,0.7">
 	<HorizontalStack>
-		<VerticalStack Width="40%"  Margin="10" Background="Jet">
+		<VerticalStack Width="40%"  Margin="10" Background="0.2,0.2,0.2,0.9">
 			<Label Text="Player 1" Font="MagicMedieval, 22" />
 			<ComboBox
 				SelectedItemChanged="onP1DeckChanged"

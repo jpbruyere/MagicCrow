@@ -1,0 +1,82 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<Window Caption="Card Model" Height="70%" Width="260" Background="0.1,0.1,0.1,0.4">
+	<Border BorderWidth="1" Margin="10" DataSource="{SelectedCardModel}">
+		<VerticalStack Margin="2" >			
+<!--			<Label Text="{Name}" Font="MagicMedieval bold, 16" Width="Stretched" />
+				<HorizontalStack Height="Fit">
+					<Popper Caption="Full sized image" Fit="true">
+						<Image Fit="true" Path="{GetImagePath}"/>
+					</Popper>
+					<Button Margin = "1" Caption="Add Card To Hand" Height="20" Width="100"
+							MouseClick="/onAddCard"/>
+				</HorizontalStack>-->
+			<CheckBox Caption="Config is OK" IsChecked="{²IsOk}"/>
+			<Group  Height="190" Width="240" Background="0.1,0.1,0.1,0.6">
+				<HorizontalStack Height="Fit" VerticalAlignment="Top" Margin="5">			
+					<Label Text="{Name}" Font="MagicMedieval bold, 16" Width="Stretched" />
+						<ListBox Data="{CostElements}" Fit="true"
+							ItemTemplate="#MagicCrow.ui.CostItem.Template"
+							Template="#MagicCrow.ui.ImgList.Template"
+							/>
+					<GraphicObject Width="5"/>
+				</HorizontalStack>
+				<Border Width="182" Height="142" Margin="0">
+					<Image Background="Red" Scaled="false" Top="-22" Fit="true" Path="{ImagePath}"/>
+				</Border>
+
+				<HorizontalStack Height="Fit" VerticalAlignment="Bottom" >
+					<Label Text="{Types}" Font="droid, 12" Width="Stretched"/>
+					<Border BorderWidth="2" CornerRadius="5" Margin="1" 
+						Fit="true" Background="White" Foreground="Black"  Visible="{IsCreature}">
+						<HorizontalStack Margin="2" Fit="true">
+							<Label Fit="true" Text="{Power}" Font="droid bold, 14" Foreground="Black" Margin="0"/>
+							<Label Fit="true" Text="/" Font="droid bold, 12" Foreground="DimGray"/>
+							<Label Fit="true" Text="{Toughness}" Font="droid bold, 14" Foreground="Black" Margin="0"/>
+						</HorizontalStack>
+					</Border>
+					<GraphicObject Width="5" Height="5"/>
+				</HorizontalStack>
+			</Group>
+
+			<ListBox Data="{Abilities}" Height="Fit" Width="Stretched"
+					ItemTemplate="#MagicCrow.ui.AbilityItem.Template">
+				<Template>
+					<GroupBox Caption="All Abilities" MinimumSize="10,10" >
+						<VerticalStack Margin="0" Name="ItemsContainer"/>
+					</GroupBox>
+				</Template>
+			</ListBox>
+
+			<GroupBox Caption="Static Abilities" Height="Fit" Width="Stretched">
+				<ListBox Data="{StaticAbilities}" Height="Fit" Width="Stretched" 
+						ItemTemplate="#MagicCrow.ui.StaticAbItem.Template" 
+						Template="#MagicCrow.ui.ImgList.Template"/>
+			</GroupBox>
+			<ListBox Data="{TriggeredAbilities}" Height="Fit" Width="Stretched"
+					ItemTemplate="#MagicCrow.ui.AbilityItem.Template">
+				<Template>
+					<GroupBox Caption="Triggered Abilities" MinimumSize="1,1" >
+						<VerticalStack Margin="0" Name="ItemsContainer"/>
+					</GroupBox>
+				</Template>
+			</ListBox>
+			<ListBox Data="{ActivatedAbilities}" Height="Fit" Width="Stretched"
+					ItemTemplate="#MagicCrow.ui.AbilityItem.Template">
+				<Template>
+					<GroupBox Caption="Activated Abilities" MinimumSize="1,1" >
+						<VerticalStack Margin="0" Name="ItemsContainer"/>
+					</GroupBox>
+				</Template>
+			</ListBox>
+			<Label Text="{Oracle}" Width="Stretched" Multiline="true"/>
+			<HorizontalStack Height="Fit">
+				<Button Caption="Save in cache" MouseClick="onSaveInCache"/>
+				<Button Caption="Reparse Datas" MouseClick="onReparse"/>
+				<Popper Caption="Forge Config File">
+					<Label Margin="5" Background="0.1,0.1,0.1,0.5" Text="{RawCardData}" Multiline="true"/>
+				</Popper>
+			</HorizontalStack>
+		</VerticalStack>
+	</Border>	
+</Window>
+

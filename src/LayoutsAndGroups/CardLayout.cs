@@ -17,13 +17,6 @@ namespace MagicCrow
 		public CardLayout(){}
 		#endregion
 
-		public override void Render ()
-		{
-			foreach (CardInstance c in Cards) {
-				c.Render ();
-			}
-		}
-
 		public void ShuffleAndLayoutZ ()
 		{
 			Cards.Shuffle ();
@@ -82,9 +75,9 @@ namespace MagicCrow
 					Animation.StartAnimation (new AngleAnimation (c, "xAngle", xAngle, MathHelper.Pi * 0.1f),70);
 					Animation.StartAnimation (new AngleAnimation (c, "yAngle", yAngle, MathHelper.Pi * 0.3f));
 					if (c.IsTapped)
-						Animation.StartAnimation (new FloatAnimation (c, "zAngle", -MathHelper.PiOver2, MathHelper.Pi * 0.1f));
+						Animation.StartAnimation (new FloatAnimation (c, "zAngle",zAngle -MathHelper.PiOver2, MathHelper.Pi * 0.1f));
 					else
-						Animation.StartAnimation (new FloatAnimation (c, "zAngle", 0f, MathHelper.Pi * 0.1f));
+						Animation.StartAnimation (new FloatAnimation (c, "zAngle",zAngle, MathHelper.Pi * 0.1f));
 
 					Animation.StartAnimation (new FloatAnimation (c, "Scale", this.Scale, 0.05f));
 

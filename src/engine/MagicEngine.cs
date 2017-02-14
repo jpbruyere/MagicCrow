@@ -339,7 +339,7 @@ namespace MagicCrow
 			UpdateCardsControler ();
 			UpdateCardsPowerAndToughness ();
 
-			foreach (Player p in Players)
+			foreach (Player p in Players)//TODO:too wide update
 				p.InPlay.UpdateLayout ();			
 		}
 
@@ -544,7 +544,7 @@ namespace MagicCrow
 
 		public void ClickOnCard (CardInstance c)
 		{
-			Magic.CurrentGameWin.CursorVisible = true;
+			//Magic.CurrentGameWin.CursorVisible = true;
 
 			if (pp != ip)				
 				return;
@@ -570,7 +570,7 @@ namespace MagicCrow
 							MagicEvent (new MagicEventArg (MagicEventType.PlayLand, c));
 						}
 					} else {
-						Magic.CurrentGameWin.CursorVisible = true;
+						//Magic.CurrentGameWin.CursorVisible = true;
 						MagicStack.PushOnStack(new Spell (c));
 					}
 				}else if (CurrentPhase != GamePhases.CleanUp && CurrentPhase != GamePhases.Untap){
@@ -633,7 +633,7 @@ namespace MagicCrow
 						else if (activableAbs.Count() > 1){
 							MagicChoice aachoice = new MagicChoice() { Player = ip };
 							foreach (Ability aa in activableAbs)
-								aachoice.Choices.Add(new AbilityActivation (c, aa));
+								aachoice.Choices.Add(new AbilityActivation (c, aa, true));
 						
 							MagicStack.PushOnStack (aachoice);
 						}
@@ -663,7 +663,7 @@ namespace MagicCrow
 			case OpenTK.Input.MouseButton.Left:
 				ClickOnCard (CardInstance.selectedCard);
 				break;
-			default:
+			case OpenTK.Input.MouseButton.Right:
 				CardInstance.selectedCard.SwitchFocus ();
 				break;
 			}
@@ -676,7 +676,7 @@ namespace MagicCrow
 				foreach (EffectGroup eg in ci.Effects) {
 					foreach (CardTarget ct in eg.Affected.Values.OfType<CardTarget>()) {
 						foreach (CardInstance c in ct.GetValidTargetsInPlay (ci))
-							c.UpdateOverlay ();
+							c.UpdateOverlaySurface ();
 					}	
 				}
 			}			
@@ -688,10 +688,11 @@ namespace MagicCrow
 			}			
 		}	
 		public void UpdateCardsPowerAndToughness()
-		{
+		{			
 			foreach (CardInstance ci in Players.SelectMany(p => p.InPlay.Cards.Where(c => c.HasType(CardTypes.Creature)))) {
 				ci.UpdatePowerAndToughness ();
-				ci.UpdateOverlay ();
+				if (CardInstance.PointOverlayVBO?.InstancedDatas?.Length > 0)
+					ci.UpdateOverlaySurface ();
 			}			
 		}
 		public void processRendering()

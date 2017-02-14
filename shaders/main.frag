@@ -43,13 +43,15 @@ subroutine (computeColor_t) void cachePass() {
 }
 */
 subroutine (computeColor_t) void uiPass() {
-	vec4 c = texture( texUI, vec2(texCoord.x, 1.0 - texCoord.y));
+	vec4 c = texture( texUI, texCoord);
 	if (c.a == 0.0)
 		discard;
 	out_frag_color = c;
+	//out_frag_color = vec4(1.0,0.0,0.0,1.0);
 }
 subroutine (computeColor_t) void selectionPass() {
-	out_frag_color =  vec4(instanceID);
+	const float unit = 1.0/255.0;
+	out_frag_color =  vec4(instanceID+unit);
 }
 void main(void)
 {	

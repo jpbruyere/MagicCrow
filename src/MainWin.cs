@@ -43,6 +43,8 @@ namespace MagicCrow
 	}
 	class Magic : CrowWindow
 	{
+		public static MagicCrow.Magic CurrentGameWin;
+
 		#region  scene matrix and vectors
 		public static Matrix4 modelview;
 		public static Matrix4 reflectedModelview;
@@ -61,14 +63,14 @@ namespace MagicCrow
 		}
 		public static Vector3 vEyeTarget = new Vector3(0f, 0f, 0f);
 		public static Vector3 vEye;
-		public static Vector3 vLookInit = Vector3.Normalize(new Vector3(0.0f, -0.7f, 0.7f));
+		public static Vector3 vLookInit = Vector3.Normalize(new Vector3(0f, -1f, 0.7f));
 		public static Vector3 vLook = vLookInit;  // Camera vLook Vector
 		public float zFar = 60.0f;
 		public float zNear = 0.1f;
 		public float fovY = (float)Math.PI / 4;
 
-		static float eyeDist = 20f;
-		static float eyeDistTarget = 20f;
+		static float eyeDist = 14f;
+		static float eyeDistTarget = 14f;
 		float MoveSpeed = 0.02f;
 		float RotationSpeed = 0.005f;
 		float ZoomSpeed = 2f;
@@ -76,7 +78,6 @@ namespace MagicCrow
 
 		public Vector4 vLight = new Vector4 (0.5f, 0.5f, -1f, 0f);
 		float[] clearColor = new float[] {0.5f,0.5f,0.9f,1.0f};
-		#endregion
 
 		public static Vector3 vFocusedPoint {
 			get { return vEyeTarget + vLook * (eyeDist - 3f); }
@@ -87,17 +88,21 @@ namespace MagicCrow
 		public static float FocusAngle {
 			get { return Vector3.CalculateAngle (vLook, Vector3.UnitZ); }
 		}
+		#endregion
 
 		#region GL
 		public static int numSamples = 1;
 		MeshesGroup<MeshData> meshes;
 
-		static RenderCache mainCache;
+		//static RenderCache mainCache;
 		static MultiShader mainShader;
-		public static Mat4InstancedShader piecesShader;
+		static GameLib.EffectShader wirlpoolShader;
+		//public static Mat4InstancedShader piecesShader;
 
 		static InstancedVAO<MeshData, CardInstancedData> mainVao;
 		static InstancedModel<CardInstancedData> vaoiCards;
+		static InstancedModel<CardInstancedData> vaoiOverlay;
+		static InstancedModel<CardInstancedData> vaoiPointOverlay;
 //		static VAOItem<CardInstancedData> vaoiPlate;
 //		static VAOItem<CardInstancedData> vaoiFSQ;
 
@@ -128,26 +133,48 @@ namespace MagicCrow
 		}
 		void initScene (){
 			meshes = new MeshesGroup<MeshData>();
+
 			vaoiCards = new InstancedModel<CardInstancedData> (meshes.Add (Mesh<MeshData>.CreateQuad (0, 0, 0, 1, 1.425f, 1, 1)));
+			vaoiOverlay = new InstancedModel<CardInstancedData> (meshes.Add (Mesh<MeshData>.CreateQuad (0, 0, 0, 1, 1, 1, 1)));
+			vaoiPointOverlay = new InstancedModel<CardInstancedData> (meshes.Add (Mesh<MeshData>.CreateQuad (0, 0, 0, 0.5f, 0.2f, 1, -1)));
 
 			mainVao = new InstancedVAO<MeshData, CardInstancedData> (meshes);
 
-			vaoiCards.AddInstance ();
+			vaoiOverlay.Instances = new InstancesVBO<CardInstancedData>();
+			CardInstance.OverlayVBO = vaoiOverlay.Instances;
+
+			vaoiPointOverlay.Instances = new InstancesVBO<CardInstancedData>();
+			CardInstance.PointOverlayVBO = vaoiPointOverlay.Instances;
 
 			mainShader = new MultiShader (
 				"#MagicCrow.shaders.main.vert",
 				"#MagicCrow.shaders.main.frag");
 			
+			//wirlpoolShader = new GameLib.EffectShader ("GGL.Shaders.GameLib.fire",64,64);
+			wirlpoolShader = new GameLib.EffectShader ("GGL.Shaders.GameLib.lightBalls",64,64);
 		}
 
 		void draw(){
 			mainShader.Enable ();
-			mainShader.SetMVP(modelview * projection);
-			mainShader.SetCardsPass ();
-			mainVao.Bind ();
 			GL.ActiveTexture (TextureUnit.Texture0);
 			GL.BindTexture(TextureTarget.Texture2DArray, cardTextures);
+
+			mainShader.SetMVP(modelview * projection);
+
+			mainVao.Bind ();
+			mainShader.SetCardsPass ();
 			mainVao.Render (BeginMode.TriangleStrip, vaoiCards.VAOPointer, vaoiCards.Instances);
+			if (vaoiPointOverlay.Datas?.Length > 0) {
+				GL.ActiveTexture (TextureUnit.Texture0);
+				GL.BindTexture(TextureTarget.Texture2DArray, CardInstance.PointOverlayTexture);
+				mainVao.Render (BeginMode.TriangleStrip, vaoiPointOverlay.VAOPointer, vaoiPointOverlay.Instances);
+			}
+			if (vaoiOverlay.Datas?.Length > 0) {
+				GL.ActiveTexture (TextureUnit.Texture10);
+				GL.BindTexture(TextureTarget.Texture2D, wirlpoolShader.Texture);
+				mainShader.SetUIPass ();
+				mainVao.Render (BeginMode.TriangleStrip, vaoiOverlay.VAOPointer, vaoiOverlay.Instances);
+			}
 			mainVao.Unbind ();
 		}
 		void draw(InstancedModel<CardInstancedData> model, BeginMode beginMode = BeginMode.Triangles){			
@@ -207,7 +234,8 @@ namespace MagicCrow
 				return;
 			}
 			int ptrSel = (ClientSize.Height - 1 - Mouse.Y) * ClientSize.Width + Mouse.X;
-			SelectedCardInstance = selDatas [ptrSel];
+
+			SelectedCardInstanceIdx = selDatas [ptrSel] - 1;
 //			if (targetedGroup != null) {				
 //				if (Selection == null) {
 //					if (targetedGroup.Count > 0) {
@@ -227,7 +255,7 @@ namespace MagicCrow
 //						TargetIdx = -1;
 //				}
 //			}
-			mainShader.SelectedIndex = SelectedCardInstance;
+			mainShader.SelectedIndex = SelectedCardInstanceIdx;
 		}
 
 		#region Selection FBO & PBO
@@ -322,7 +350,9 @@ namespace MagicCrow
 		#endregion
 
 		#region Interface
-		public static MagicCrow.Magic CurrentGameWin;
+		GraphicObject mstack = null, phasePannel;
+		GraphicObject[] playerPannels;
+
 		void loadWindow(string path){
 			try {
 				GraphicObject g = FindByName (path);
@@ -347,17 +377,36 @@ namespace MagicCrow
 			MouseWheelChanged += Mouse_WheelChanged;
 			KeyboardKeyDown += MainWin_KeyboardKeyDown;
 		}
-		public static void AddLog(string msg){
-			Debug.WriteLine("LOG: " + msg);
+
+		#region LOGS
+		List<string> logBuffer = new List<string> ();
+		public List<string> LogBuffer {
+			get { return logBuffer; }
+			set { logBuffer = value; }
 		}
+		public static void AddLog(string msg){
+			CurrentGameWin.AddLog2(msg);
+		}
+		public void AddLog2(string msg)
+		{
+			if (string.IsNullOrEmpty (msg))
+				return;
+			foreach (string s in msg.Split('\n')) {
+				if (string.IsNullOrEmpty (s))
+					continue;
+				LogBuffer.Add (msg);
+			}
+			NotifyValueChanged ("LogBuffer", logBuffer);
+		}
+		#endregion
 
 		void onDeckListValueChange (object sender, SelectionChangeEventArgs e)
 		{
-			NotifyValueChanged ("CardEntries", (e.NewValue as Deck).CardEntries);	
+			NotifyValueChanged ("CardEntries", (e.NewValue as DeckFile).CardEntries);	
 		}
 		void onPreconDeckListValueChange (object sender, SelectionChangeEventArgs e)
 		{
-			currentDeck = e.NewValue as Deck;
+			currentDeck = e.NewValue as DeckFile;
 			loadWindow ("#MagicCrow.ui.deckCards.iml");
 			NotifyValueChanged ("SelectedDeck", currentDeck);
 			NotifyValueChanged ("CardEntries", currentDeck.CardEntries);
@@ -370,8 +419,7 @@ namespace MagicCrow
 				Load ("#MagicCrow.ui.cardModel.iml").DataSource = (e.NewValue as MainLine).Card;
 		}
 		void onStartNewGame (object sender, MouseButtonEventArgs e)
-		{
-			closeWindow ("#MagicCrow.ui.mainMenu.iml");
+		{			
 			startNewGame ();
 		}
 		void onShowDecks (object sender, MouseButtonEventArgs e)
@@ -382,6 +430,21 @@ namespace MagicCrow
 		void onSaveInCache (object sender, MouseButtonEventArgs e){			
 			currentDeck.CacheAllCards ();
 		}
+		void onCancelLastClick (object sender, MouseButtonEventArgs e){
+			engine.MagicStack.PopMSE ();
+		}
+		void onPhaseClick (object sender, MouseButtonEventArgs e){			
+			Border g = sender as Border;
+
+			int phaseIdx = (int)Enum.Parse (typeof(GamePhases), g.Name);
+			engine.ip.PhaseStops [phaseIdx] = !engine.ip.PhaseStops [phaseIdx];
+
+			if (engine.ip.PhaseStops[phaseIdx])
+				NotifyValueChanged (g.Name + "Opacity", 1.0);
+			else
+				NotifyValueChanged (g.Name + "Opacity", 0.35);
+		}
+
 		#endregion
 
 		#region Game Logic
@@ -389,16 +452,17 @@ namespace MagicCrow
 		public static string deckPath = dataPath + "quest/precons/";
 		static string cardImgsBasePath = System.IO.Path.Combine (MagicData.cardsArtPath, "cards");
 
-		int cardTextures;
-
-		Deck[] deckList;
-		string[] cardList;
-		Deck currentDeck;
 		MagicEngine engine;
+		DeckFile[] deckList;
+		public CardInstance[] cards;//cards in play array
+		int cardTextures;
 		int selCardInst = -1;//index of selected card in cardsVBO, given by selection texture
 
 		public Player[] Players;
-		public Deck[] DeckList {
+
+		DeckFile currentDeck;
+		string[] cardList;
+		public DeckFile[] DeckList {
 			get { return deckList; }
 			set {
 				if (deckList == value)
@@ -417,17 +481,34 @@ namespace MagicCrow
 			}			
 		}
 
-		public int SelectedCardInstance {
+
+		public List<MagicStackElement> MagicStack
+		{ 
+			get { 
+				return engine == null ? new List<MagicStackElement> () :
+					engine.MagicStack.ToList (); 
+			}
+		}
+		/// <summary>
+		/// index in cards[] of currently selected card.
+		/// </summary>
+		public int SelectedCardInstanceIdx {
 			get { return selCardInst; }
 			set {
 				if (selCardInst == value)
 					return;
 				selCardInst = value;
-				if (cards != null) {
-					if (selCardInst < cards.Length)
-						CardInstance.selectedCard = cards [selCardInst];
-				}
+				if (selCardInst>=0 && selCardInst < cards?.Length)
+					CardInstance.selectedCard = cards [selCardInst];
+				else
+					CardInstance.selectedCard = null;
 			}
+		}
+		public MagicCard SelectedCardModel {
+			get {return CardInstance.selectedCard == null ? null : CardInstance.selectedCard.Model; }
+		}
+		public CardInstance SelectedCardInstance {
+			get {return CardInstance.selectedCard == null ? null : CardInstance.selectedCard; }
 		}
 		public int P1DeckIdx {
 			get { return Crow.Configuration.Get<int> ("Player1DeckIdx"); }
@@ -453,11 +534,11 @@ namespace MagicCrow
 		{
 			string[] editions = Directory.GetFiles(Magic.deckPath, "*.dck");
 
-			List<Deck> tmpList = new List<Deck> ();
+			List<DeckFile> tmpList = new List<DeckFile> ();
 			int i = 0;
 			foreach (string f in editions)
 			{
-				tmpList.Add(Deck.PreLoadDeck (f));
+				tmpList.Add(new DeckFile(f));
 				i++;
 			}
 			DeckList = tmpList.ToArray ();
@@ -468,9 +549,63 @@ namespace MagicCrow
 		}
 		#endregion
 
+		void initGame () {
+			loadPreconstructedDecks ();
+
+			MagicData.Init ();
+
+			Players = new Player[] 
+			{ 
+				new Player("player 1"),
+				new AiPlayer("player 2")
+			};
+
+			Players [1].Library.x = -Players [1].Library.x;
+			Players [1].Library.y = -Players [1].Library.y;
+			Players [1].Library.zAngle = MathHelper.Pi;
+			Players [1].Graveyard.x = -Players [1].Graveyard.x;
+			Players [1].Graveyard.y = -Players [1].Graveyard.y;
+			Players [1].Graveyard.zAngle = MathHelper.Pi;
+			Players [1].Hand.y = -Players [1].Hand.y;
+			Players [1].Hand.zAngle = MathHelper.Pi;
+			Players [1].InPlay.LandsLayout.x = -Players [1].InPlay.LandsLayout.x;
+			Players [1].InPlay.LandsLayout.y = -Players [1].InPlay.LandsLayout.y;
+			Players [1].InPlay.LandsLayout.zAngle = MathHelper.Pi;
+			Players [1].InPlay.CreatureLayout.x = -Players [1].InPlay.CreatureLayout.x;
+			Players [1].InPlay.CreatureLayout.y = -Players [1].InPlay.CreatureLayout.y;
+			Players [1].InPlay.CreatureLayout.zAngle = MathHelper.Pi;
+			Players [1].InPlay.CombatingCreature.x = -Players [1].InPlay.CombatingCreature.x;
+			Players [1].InPlay.CombatingCreature.y = -Players [1].InPlay.CombatingCreature.y;
+			Players [1].InPlay.CombatingCreature.zAngle = MathHelper.Pi;
+			Players [1].InPlay.OtherLayout.x = -Players [1].InPlay.OtherLayout.x;
+			Players [1].InPlay.OtherLayout.y = -Players [1].InPlay.OtherLayout.y;
+			Players [1].InPlay.OtherLayout.zAngle = MathHelper.Pi;			
+		}
+		void updatePhaseStopsControls(){
+			Group vsPhases = phasePannel.FindByName ("Phases") as Group;
+			for (int i = 0; i < 12; i++) {
+				if (engine.ip.PhaseStops [i])
+					((vsPhases.Children [i] as Container).Child as Image).Opacity = 1.0;
+			}
+		}
 		void startNewGame(){
-			Players [0].Deck = DeckList [P1DeckIdx];
-			Players [1].Deck = DeckList [P2DeckIdx];
+			closeWindow ("#MagicCrow.ui.mainMenu.iml");
+			loadWindow ("#MagicCrow.ui.log.iml");
+
+			phasePannel = Load ("#MagicCrow.ui.phases.iml");
+			AddWidget(phasePannel);
+			phasePannel.DataSource = this;
+
+			playerPannels = new GraphicObject[2];
+			for (int i = 0; i < 2; i++) {
+				playerPannels[i] = Load ("#MagicCrow.ui.player.iml");
+				playerPannels[i].HorizontalAlignment = HorizontalAlignment.Left;
+				playerPannels[i].DataSource = Players[i];
+			}
+			playerPannels[1].HorizontalAlignment = HorizontalAlignment.Right;
+
+			new Deck(DeckList [P1DeckIdx],Players [0]);
+			new Deck(DeckList [P2DeckIdx],Players [1]);
 
 			Players [0].LoadDeckCards ();
 			Players [1].LoadDeckCards ();
@@ -479,14 +614,78 @@ namespace MagicCrow
 			MagicEngine.MagicEvent += MagicEngine_MagicEvent;
 
 			engine.currentPlayerIndex = engine.interfacePlayer;
+
+			mstack = Load ("#MagicCrow.ui.MagicStack.iml");				
+			AddWidget(mstack);
+			mstack.DataSource = engine.MagicStack;
+
+			updatePhaseStopsControls ();
+		}
+		void closeCurrentGame(){			
+			closeWindow ("#MagicCrow.ui.log.iml");
+			DeleteWidget (phasePannel);
+
+			for (int i = 0; i < 2; i++) {
+				Players[i].Deck.Cards = new List<CardInstance>();
+				Players[i].DeckLoaded = false;
+				Players[i].CurrentState = MagicCrow.Player.PlayerStates.Init;
+				DeleteWidget (playerPannels [i]);
+			}
+
+			engine = null;
+
+			DeleteWidget (mstack);
+
+			CardInstance.CardsVBO = null;
+			vaoiCards.Instances.Dispose ();
+			vaoiCards.Instances = null;
+
+			cards = null;
+			if (GL.IsTexture (cardTextures))
+				GL.DeleteTexture (cardTextures);
+			cardTextures = 0;
+
+			loadWindow ("#MagicCrow.ui.mainMenu.iml");
 		}
 
 		void MagicEngine_MagicEvent (MagicEventArg arg)
 		{
-			if (arg.Type == MagicEventType.BeginPhase)
-				NotifyValueChanged ("CurrentPhase", (arg as PhaseEventArg).Phase);
+			Border b;
+
+			AddLog (arg.ToString ());
+
+			switch (arg.Type)
+			{
+			case MagicEventType.PlayerHasLost:
+				closeCurrentGame ();
+				break;
+			case MagicEventType.Unset:
+				break;
+			case MagicEventType.BeginPhase:
+				b = phasePannel.FindByName 
+					((arg as PhaseEventArg).Phase.ToString ()) as Border;
+				if (b!=null)
+					b.Foreground = Color.White;				
+				break;
+			case MagicEventType.EndPhase:
+				b = phasePannel.FindByName 
+					((arg as PhaseEventArg).Phase.ToString ()) as Border;
+				if (b!=null)
+					b.Foreground = Color.Transparent;
+				break;
+			case MagicEventType.PlayLand:
+				break;
+			case MagicEventType.CastSpell:
+				break;
+			case MagicEventType.TapCard:
+				break;
+			case MagicEventType.ChangeZone:
+				break;
+			default:
+				break;
+			}
 		}
-		CardInstance[] cards;
+
 		public void CreateGLCards(){
 			Random rnd = new Random();
 			cards = Players[0].Deck.Cards.Concat(Players[1].Deck.Cards).ToArray();
@@ -511,9 +710,9 @@ namespace MagicCrow
 					imgIdx = magicCardImgs.Count;
 					magicCardImgs.Add (imgPath);
 				}
-				cid [i].modelMats = Matrix4.Identity; //Matrix4.CreateTranslation (new Vector3(0.4f*i,0,0.02f*i));
+				//cid [i].modelMats = Matrix4.Identity; //Matrix4.CreateTranslation (new Vector3(0.4f*i,0,0.02f*i));
 				cid [i].picked = imgIdx;
-				ci.instanceIdx = i;
+				ci.cardVboIdx = i;
 			}
 			//Tetra.Texture.DefaultMinFilter = TextureMinFilter.LinearMipmapLinear;
 			Tetra.Texture.DefaultMagFilter = TextureMagFilter.Linear;
@@ -544,30 +743,9 @@ namespace MagicCrow
 			initInterface ();
 			initOpenGL ();
 
-			loadPreconstructedDecks ();
+			initGame ();
 
-			Players = new Player[] 
-			{ 
-				new Player("player 1"), //"Kor Armory.dck"
-				new AiPlayer("player 2")
-			};
 
-			Players [1].Library.x = -Players [1].Library.x;
-			Players [1].Library.y = -Players [1].Library.y;
-			Players [1].Library.zAngle = MathHelper.Pi;
-			Players [1].Graveyard.x = -Players [1].Graveyard.x;
-			Players [1].Graveyard.y = -Players [1].Graveyard.y;
-			Players [1].Graveyard.zAngle = MathHelper.Pi;
-			Players [1].Hand.y = -Players [1].Hand.y;
-			Players [1].Hand.zAngle = MathHelper.Pi;
-
-			GraphicObject g = Load ("#MagicCrow.ui.player.iml");
-			g.HorizontalAlignment = HorizontalAlignment.Left;
-			g.DataSource = Players[0];
-
-			g = Load ("#MagicCrow.ui.player.iml");
-			g.HorizontalAlignment = HorizontalAlignment.Right;
-			g.DataSource = Players[1];
 
 			loadWindow ("#MagicCrow.ui.mainMenu.iml");
 			loadWindow ("#MagicCrow.ui.engine.iml");
@@ -579,7 +757,8 @@ namespace MagicCrow
 		}
 		public override void OnRender (FrameEventArgs e)
 		{
-			draw ();
+			if (CardInstance.CardsVBO != null)
+				draw ();
 		}
 		protected override void OnResize (EventArgs e)
 		{
@@ -587,22 +766,36 @@ namespace MagicCrow
 			initSelectionFbo ();
 			UpdateViewMatrix();
 		}
-
+		int frame;
+		float time;
 		protected override void OnUpdateFrame (FrameEventArgs e)
 		{
 			base.OnUpdateFrame (e);
 
+			unchecked{
+				time += (float)e.Time;
+				frame++;
+			}
+
 			GGL.Animation.ProcessAnimations ();
 
-			if (CardInstance.CardsVBO != null)
-				CardInstance.CardsVBO.UpdateVBOSubData ();
-
-			updateSelectionMap ();
-
-			updateTarget ();
-
-			if (engine != null)
+			if (engine == null)
+				return;
+			if (frame % 3 == 0)
 				engine.Process ();
+
+			wirlpoolShader.Update (time);
+
+			Rectangle r = this.ClientRectangle;
+			GL.Viewport( r.X, r.Y, r.Width, r.Height);
+
+			if (CardInstance.CardsVBO != null) {
+				CardInstance.CardsVBO.UpdateVBOSubData ();
+				CardInstance.OverlayVBO.UpdateVBOSubData ();
+				CardInstance.PointOverlayVBO.UpdateVBOSubData ();
+				updateSelectionMap ();
+				updateTarget ();
+			}
 		}
 		#endregion
 
@@ -629,46 +822,85 @@ namespace MagicCrow
 		void MainWin_KeyboardKeyDown (object sender, OpenTK.Input.KeyboardKeyEventArgs e)
 		{
 			switch (e.Key) {
-			case OpenTK.Input.Key.Space:
-//				for (int i = 0; i < currentDeck.Cards.Count; i++) {
-//					CardInstance ci = currentDeck.Cards [i];
-//					GGL.Animation.StartAnimation (new GGL.FloatAnimation (ci, "x", 0.4f * i, 0.5f));
-//					GGL.Animation.StartAnimation(new GGL.FloatAnimation(ci, "z", 0.05f * i, 0.4f));
-//				}
-				Players[0].DrawOneCard();
+			case OpenTK.Input.Key.KeypadEnter:
+				engine.ip.PhaseDone = true;
+//				if (engine.pp == engine.ip && engine.cp != engine.pp)
+//					engine.GivePriorityToNextPlayer ();
 				break;
-			case OpenTK.Input.Key.Q:
-				for (int i = 0; i < currentDeck.Cards.Count; i++) {
-					CardInstance ci = currentDeck.Cards [i];
-					GGL.Animation.StartAnimation (new GGL.FloatAnimation (ci, "x", 0f, 0.5f));
+			case OpenTK.Input.Key.Escape:
+				closeCurrentGame ();
+				break;
+			#if DEBUG
+			case OpenTK.Input.Key.F1:
+				if (CardInstance.selectedCard == null)
+					break;
+				if (e.Shift){
+					loadWindow ("#MagicCrow.ui.cardInstanceView.iml");
+					NotifyValueChanged ("SelectedCardInstance", null);
+					NotifyValueChanged ("SelectedCardInstance", SelectedCardInstance);
+				}else{
+					loadWindow ("#MagicCrow.ui.cardView.iml");
+					NotifyValueChanged ("SelectedCardModel", SelectedCardModel);
 				}
-				//
 				break;
-			case OpenTK.Input.Key.I:
-				CardInstance c = currentDeck.Cards [SelectedCardInstance];
-				GGL.Animation.StartAnimation (new GGL.PathAnimation(c, "Position",new GGL.Path(c.Position,vFocusedPoint)));
-				GGL.Animation.StartAnimation (new GGL.AngleAnimation(c, "xAngle",FocusAngle));
-				//
+			case OpenTK.Input.Key.F2:
+				loadWindow ("#MagicCrow.ui.MagicStackView.iml");				
 				break;
-			case OpenTK.Input.Key.R:
-				Players [0].Library.RevealToUIPlayer ();
+			case OpenTK.Input.Key.F3:
+				loadWindow ("#MagicCrow.ui.decks.iml");				
 				break;
-//			case OpenTK.Input.Key.Space:
-//				for (int i = 5; i < 6; i++) {
-//					CardInstance ci = currentDeck.Cards [i];
-//					GGL.Animation.StartAnimation (new GGL.FloatAnimation (ci, "x", 0.4f * i, 0.2f));
-//					GGL.Animation.StartAnimation(new GGL.FloatAnimation(ci, "z", 0.05f * i, 0.2f));
-//				}
-//				//
-//				break;
-//			case OpenTK.Input.Key.Q:
-//				for (int i = 5; i < 6; i++) {
-//					CardInstance ci = currentDeck.Cards [i];
-//					GGL.Animation.StartAnimation (new GGL.FloatAnimation (ci, "x", 0f, 0.2f));
-//				}
-//				//
-//				break;
-
+			case OpenTK.Input.Key.Space:
+				Players [0].DrawOneCard ();
+				break;
+			case OpenTK.Input.Key.H:
+				if (e.Control){
+					
+				}else
+					CardInstance.selectedCard?.ChangeZone(CardGroupEnum.Hand);
+				break;
+			case OpenTK.Input.Key.D:
+				if (e.Control){
+					foreach (CardInstance ci in Players[0].Deck.Cards.Where(c=>c.CurrentGroup.GroupName == CardGroupEnum.Hand)){
+						ci.ChangeZone(CardGroupEnum.Library);
+					}
+				}	
+				break;
+			case OpenTK.Input.Key.L:
+				if (e.Control){
+					foreach (CardInstance ci in Players[0].Deck.Cards.Where(c=>c.HasType(CardTypes.Land)&&c.CurrentGroup.GroupName != CardGroupEnum.InPlay).Take(5)){
+						ci.ChangeZone(CardGroupEnum.InPlay);
+					}
+				}else
+					Players [0].Library.RevealToUIPlayer ();
+				break;
+			case OpenTK.Input.Key.O:
+				engine.ip.Opponent.Hand.RevealToUIPlayer();
+				break;			
+			case OpenTK.Input.Key.U:
+				if (e.Control){
+					foreach (CardInstance ci in Players[0].Deck.Cards.Where(c=>c.HasType(CardTypes.Land)&&c.CurrentGroup.GroupName == CardGroupEnum.InPlay)){
+						ci.tappedWithoutEvent = false;
+					}
+				}
+				if (CardInstance.selectedCard == null)
+					return;
+				CardInstance.selectedCard.tappedWithoutEvent = false;
+				break;			
+			case OpenTK.Input.Key.Delete:
+				if (CardInstance.selectedCard == null)
+					return;
+				CardInstance.selectedCard.Reset ();
+				CardInstance.selectedCard.ChangeZone(CardGroupEnum.Hand);			
+				break;
+			case OpenTK.Input.Key.KeypadPlus:
+				engine.ip.AllowedLandsToBePlayed++;
+				break;
+			case OpenTK.Input.Key.N:
+				CardInstance nextInvalid = Players [0].Library.Cards.Where(c=>!c.Model.IsOk).FirstOrDefault();
+				Players [0].Library.RemoveCard(nextInvalid);
+				Players [0].Hand.AddCard(nextInvalid);
+				break;
+			#endif
 			}
 		}
 
@@ -676,9 +908,7 @@ namespace MagicCrow
 
 		#region Mouse
 		void Mouse_ButtonDown (object sender, OpenTK.Input.MouseButtonEventArgs e)
-		{
-			if (e.Mouse.LeftButton != OpenTK.Input.ButtonState.Pressed)
-				return;
+		{			
 			if (engine != null)
 				engine.processMouseDown (e);
 		}
