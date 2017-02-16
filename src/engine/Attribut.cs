@@ -84,7 +84,7 @@ namespace MagicCrow
 
 		public static MultiformAttribut<T> operator +(MultiformAttribut<T> ma, T a)
         {
-			if (ma == null)
+			if (!(ma?.Count > 0))
 				return a == null ? null : new MultiformAttribut<T> (a);
 			if (ma.attributeType == AttributeType.Composite) {
 				MultiformAttribut<T> tmp = ma.Clone;

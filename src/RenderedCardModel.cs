@@ -6,13 +6,15 @@ namespace MagicCrow
 {
 	public abstract class RenderedCardModel
 	{
-		public static InstancesVBO<CardInstancedData> CardsVBO, OverlayVBO, PointOverlayVBO;
-		public static byte[] PointOverlayBmp;
-		public static int PointOverlayTexture;
-		public const int pointOverlayWidth = 200;
+		public static InstancesVBO<CardInstancedData> CardsVBO, OverlayVBO, PointOverlayVBO, InfoOverlayVBO;
+		public static byte[] PointOverlayBmp, InfoOverlayBmp;
+		public static int PointOverlayTexture, InfoOverlayTexture;
+		public const int pointOverlayWidth = 100;
 		public const int pointOverlayHeight = 40;
+		public const int infoOverlayWidth = 180;
+		public const int infoOverlayHeight = 30;
 
-		public int cardVboIdx, overlayVboIdx=-1, pointOverlayVboIdx=-1;
+		public int cardVboIdx, overlayVboIdx=-1, pointOverlayVboIdx=-1, infoOverlayVboIdx=-1;
 
 		protected float _x = 0.0f;
 		protected float _y = 0.0f;
@@ -119,6 +121,7 @@ namespace MagicCrow
 			x = y = z = xAngle = yAngle = zAngle = 0;
 		}			
 
+		//TODO:rationalize matrix computations
 		public Matrix4 ModelMatrix {
 			get
 			{
@@ -133,16 +136,30 @@ namespace MagicCrow
 		Matrix4 pointOverlayMatrix {
 			get
 			{
-				Matrix4 tmp =					
+				return xAngle == 0f ? Matrix4.CreateRotationX (Magic.FocusAngle) *
 					Matrix4.CreateTranslation (0.25f, -0.7f, 0.04f) *
 					Matrix4.CreateScale (Scale) *
 					Matrix4.CreateRotationX (xAngle) *
 					Matrix4.CreateRotationY (yAngle) *
 					//Matrix4.CreateRotationZ (zAngle) *
-					Matrix4.CreateTranslation (x, y, z);
-				return xAngle == 0f ? Matrix4.CreateRotationX (Magic.FocusAngle) * tmp : tmp;
+					Matrix4.CreateTranslation (x, y, z) : Matrix4.Zero;
 			}
 		}
+		Matrix4 infoOverlayMatrix {
+			get
+			{
+				return xAngle == 0f ?
+					Matrix4.CreateRotationX (Magic.FocusAngle) * Matrix4.CreateTranslation (0f, 0.65f, 0.1f) *
+					Matrix4.CreateScale (Scale) *
+					Matrix4.CreateRotationX (xAngle) *
+					Matrix4.CreateRotationY (yAngle) *
+					//Matrix4.CreateRotationZ (zAngle) *
+					Matrix4.CreateTranslation (x, y, z):Matrix4.Zero;
+			}
+		}
+		/// <summary>
+		/// Update all vbo data struc for this card instance and set dirty states
+		/// </summary>
 		public void updateInstacedDatas(){
 			if (CardsVBO == null)
 				return;
@@ -154,20 +171,33 @@ namespace MagicCrow
 				OverlayVBO.InstancedDatas [overlayVboIdx].modelMats = mod * Matrix4.CreateTranslation(0,0,0.1f);
 				OverlayVBO.SetInstanceIsDirty (overlayVboIdx);
 			}
-			if (pointOverlayVboIdx >= 0) {				
-				PointOverlayVBO.InstancedDatas [pointOverlayVboIdx].modelMats = pointOverlayMatrix;
-				PointOverlayVBO.InstancedDatas [pointOverlayVboIdx].picked = pointOverlayVboIdx;
-				PointOverlayVBO.SetInstanceIsDirty (pointOverlayVboIdx);
-			}
+			if (pointOverlayVboIdx >= 0)				
+				updatePointOverlayDatas ();			
+			if (infoOverlayVboIdx >= 0)
+				updateInfoOverlayDatas ();
 		}
+		/// <summary>
+		/// Update data struc for this card instance and set VBO dirty
+		/// </summary>
 		public void updateOverlayDatas(){
 			OverlayVBO.InstancedDatas [overlayVboIdx].modelMats = ModelMatrix * Matrix4.CreateTranslation(0,0,0.1f);
 			OverlayVBO.SetInstanceIsDirty (overlayVboIdx);
 		}
+		/// <summary>
+		/// Update data struc for this data struct and set VBO dirty
+		/// </summary>
 		public void updatePointOverlayDatas(){
 			PointOverlayVBO.InstancedDatas [pointOverlayVboIdx].modelMats = pointOverlayMatrix;
 			PointOverlayVBO.InstancedDatas [pointOverlayVboIdx].picked = pointOverlayVboIdx;
 			PointOverlayVBO.SetInstanceIsDirty (pointOverlayVboIdx);
+		}
+		/// <summary>
+		/// Update data struc for this data struct and set VBO dirty
+		/// </summary>
+		public void updateInfoOverlayDatas(){
+			InfoOverlayVBO.InstancedDatas [infoOverlayVboIdx].modelMats = infoOverlayMatrix;
+			InfoOverlayVBO.InstancedDatas [infoOverlayVboIdx].picked = infoOverlayVboIdx;
+			InfoOverlayVBO.SetInstanceIsDirty (infoOverlayVboIdx);
 		}
 	}
 }

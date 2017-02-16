@@ -1,0 +1,108 @@
+﻿<?xml version="1.0"?>
+<VerticalStack Margin="1" Height="Fit">
+	<HorizontalStack Height="Fit">
+		<ListBox Data="{CostElements}" Fit="true" 
+				ItemTemplate="#MagicCrow.ui.CostItem.Template"
+				Template="#MagicCrow.ui.ImgList.Template"/>
+		<ListBox Data="{OtherCostElements}" Fit="true">
+			<Template>
+				<HorizontalStack Name="ItemsContainer"/>
+			</Template>
+		</ListBox>
+	<!--	<Label Text="{}"/>-->
+	<!--	<Label Text="{ActivationCost}" />-->
+		<Label Text="{Description}" />
+		<Label Text="{Message}" />
+	</HorizontalStack>
+	<HorizontalStack Height="Fit">
+		<Label Text="Trigger: "/>
+		<Label Text="{Trigger}"/>
+	</HorizontalStack>
+	<HorizontalStack Height="Fit">
+		<Label Text="Category: "/>
+		<Label Text="{Category}"/>
+	</HorizontalStack>
+	<HorizontalStack Height="Fit">
+		<Label Text="Type: "/>
+		<Label Text="{AbilityType}"/>
+	</HorizontalStack>
+	<HorizontalStack Height="Fit">
+		<Label Text="SubAbility: "/>
+		<Label Text="{SubAbility}"/>
+	</HorizontalStack>
+	<HorizontalStack Height="Fit">
+		<Label Text="MinimumTargetCount: "/>
+		<Label Text="{MinimumTargetCount}"/>
+	</HorizontalStack>
+	<HorizontalStack Height="Fit">
+		<Label Text="MaximumTargetCount: "/>
+		<Label Text="{MaximumTargetCount}"/>
+	</HorizontalStack>
+	<CheckBox Caption="Mandatory:" IsChecked="{Mandatory}"/>
+	<HorizontalStack Height="Fit">
+		<Label Text="ValidTargets: "/>
+		<Label Text="{ValidTargets}"/>
+	</HorizontalStack>
+	<HorizontalStack Height="Fit">
+		<Label Text="TargetPrompt: "/>
+		<Label Text="{TargetPrompt}"/>
+	</HorizontalStack>
+	<ListBox Data="{Effects}" Height="Fit">
+<!--		<Template>
+			<GroupBox Caption="Effects" MinimumSize="1,1" >
+				<VerticalStack Name="ItemsContainer"/>
+			</GroupBox>
+		</Template>-->
+		<ItemTemplate DataType="MagicCrow.EffectGroup">
+			<GroupBox Height="Fit" Caption="{}" MinimumSize="1,1" >
+				<VerticalStack>
+					<HorizontalStack Height="Fit">
+						<Label Text="Mode: "/>
+						<Label Text="{Mode}"/>
+					</HorizontalStack>
+					<HorizontalStack Height="Fit">
+						<Label Text="Counter Cost: "/>
+						<Label Text="{CounterEffectCost}"/>
+					</HorizontalStack>
+					<HorizontalStack Height="Fit">
+						<Label Text="TrigStart: "/>
+						<Label Text="{TrigStart}"/>
+					</HorizontalStack>
+					<HorizontalStack Height="Fit">
+						<Label Text="TrigEnd: "/>
+						<Label Text="{TrigEnd}"/>
+					</HorizontalStack>
+					<HorizontalStack Height="Fit">
+						<Label Text="Affected: "/>
+						<Label Text="{Affected}"/>
+					</HorizontalStack>
+					<ListBox Data="{}" SelectionBackground="DeepJungleGreen">
+						<Template>
+							<VerticalStack Name="ItemsContainer"/>
+						</Template>
+						<ItemTemplate DataType="MagicCrow.NumericEffect">
+							<HorizontalStack Margin="2" Height="Fit">
+								<Label Text="{TypeOfEffect}"/>
+								<Label Text="{Amount}"/>
+								<Label Text=" * "/>
+								<Label Text="{Multiplier}"/>
+							</HorizontalStack>
+						</ItemTemplate>
+						<ItemTemplate DataType="MagicCrow.AbilityEffect">
+							<HorizontalStack Margin="2" Height="Fit">
+								<Label Text="{TypeOfEffect}"/>
+								<Label Text="{Ability}"/>
+							</HorizontalStack>
+						</ItemTemplate>
+						<ItemTemplate DataType="MagicCrow.Effect">
+							<Container Margin="2" Height="Fit">
+								<Label Text="{TypeOfEffect}"/>
+							</Container>
+						</ItemTemplate>
+					</ListBox>
+				</VerticalStack>
+			</GroupBox>
+		</ItemTemplate>
+	</ListBox>
+</VerticalStack>
+

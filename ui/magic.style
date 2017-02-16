@@ -21,3 +21,9 @@ phaseBut {
 phaseImg {
 	Opacity = 0.35;
 }
+butMenu {
+	CornerRadius = 6;
+	Width = Stretched;
+	Font = Droid, 16;
+	Background = 0.1,0.1,0.1,0.5;
+}

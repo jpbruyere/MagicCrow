@@ -133,7 +133,7 @@ namespace MagicCrow
 
 			Hand = new CardGroup(CardGroupEnum.Hand);
 			Hand.y = -8.0f;
-			Hand.z = 3.2f;
+			Hand.z = 3.5f;
 			Hand.xAngle = Vector3.CalculateAngle (Magic.vLook, Vector3.UnitZ);
 			//Hand.xAngle = 0f;//MathHelper.Pi - Vector3.CalculateAngle (Magic.vLook, Vector3.UnitZ);
 			Hand.HorizontalSpacing = 0.5f;

@@ -134,8 +134,6 @@ namespace MagicCrow
 		
 		const int maxCard = 1000;
 
-		public static Dictionary<string, MagicCard> CardsDatabase = new Dictionary<string, MagicCard>(StringComparer.OrdinalIgnoreCase);
-
 		public static void CacheCard(MagicCard c){
 			if (!Directory.Exists (cachingPath))
 				Directory.CreateDirectory (cachingPath); 
@@ -146,10 +144,6 @@ namespace MagicCrow
 			}
 		}
 		public static bool TryGetCardFromCache(string name, ref MagicCard c){
-			if (CardsDatabase.ContainsKey (name)) {
-				c = CardsDatabase [name];
-				return true;
-			}
 			string cardPath = System.IO.Path.Combine (cachingPath, name + ".bin");
 			if (!File.Exists (cardPath))
 				return false;
@@ -160,10 +154,6 @@ namespace MagicCrow
 			return true;
 		}
 		public static bool TryGetCardFromZip(string name, ref MagicCard c){
-			if (CardsDatabase.ContainsKey (name)) {
-				c = CardsDatabase [name];
-				return true;
-			}
 			string cfn = name.Substring(0,1).ToLower() + "/" + name.Trim ().Replace (' ', '_').Replace("\'",string.Empty).ToLower () + ".txt";
 			Stream cardStream = GetCardDataStream (cfn);
 			if (cardStream == null)
@@ -176,9 +166,8 @@ namespace MagicCrow
 				MemoryStream ms = new MemoryStream();
 				cardStream.CopyTo (ms);
 				ms.Seek(0,SeekOrigin.Begin);
-				LoadCardData(ms);
+				c = LoadCardData(ms);
 				cardStream.Seek(0,SeekOrigin.Begin);
-				c = CardsDatabase [name];
 				using (StreamReader tr = new StreamReader(cardStream)){
 					c.RawCardData = tr.ReadToEnd();
 				}
@@ -380,19 +369,6 @@ namespace MagicCrow
 			}
 			#endregion
 
-			try
-			{
-				if (c.Name == "Circle of Protection" || c.Name == "Rune of Protection")
-				{
-					CardsDatabase.Add(c.Name + ": " + c.colorComponentInPicName, c);
-				}
-				else
-					CardsDatabase.Add(c.Name, c);
-			}
-			catch (Exception e)
-			{
-				Debug.WriteLine("failed to add: {0} to db\n{1}", c.Name, e.Message);
-			}
 			return c;
 		}
 		public static void LoadAllCardsInZip()

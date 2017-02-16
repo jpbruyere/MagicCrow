@@ -336,8 +336,7 @@ namespace MagicCrow
 				break;
 			}
 
-			UpdateCardsControler ();
-			UpdateCardsPowerAndToughness ();
+			CheckCardInstanceUpdates ();
 
 			foreach (Player p in Players)//TODO:too wide update
 				p.InPlay.UpdateLayout ();			
@@ -670,39 +669,32 @@ namespace MagicCrow
 		}
 		#endregion
 
-		public void UpdateOverlays()
-		{
-			foreach (CardInstance ci in CardsInPlayHavingEffects) {
-				foreach (EffectGroup eg in ci.Effects) {
-					foreach (CardTarget ct in eg.Affected.Values.OfType<CardTarget>()) {
-						foreach (CardInstance c in ct.GetValidTargetsInPlay (ci))
-							c.UpdateOverlaySurface ();
-					}	
-				}
-			}			
-		}
-		public void UpdateCardsControler()
-		{
+//		public void UpdateOverlays()
+//		{
+//			foreach (CardInstance ci in CardsInPlayHavingEffects) {
+//				foreach (EffectGroup eg in ci.Effects) {
+//					foreach (CardTarget ct in eg.Affected.Values.OfType<CardTarget>()) {
+//						foreach (CardInstance c in ct.GetValidTargetsInPlay (ci))
+//							c.UpdatePointsOverlaySurface ();
+//					}	
+//				}
+//			}			
+//		}
+		/// <summary>
+		/// Checks controler, power, toughness and ability changes with effects, damages and so on
+		/// </summary>
+		public void CheckCardInstanceUpdates()
+		{			
 			foreach (CardInstance ci in Players.SelectMany(p => p.InPlay.Cards)) {
 				ci.UpdateControler ();
-			}			
-		}	
-		public void UpdateCardsPowerAndToughness()
-		{			
-			foreach (CardInstance ci in Players.SelectMany(p => p.InPlay.Cards.Where(c => c.HasType(CardTypes.Creature)))) {
+				if (!ci.HasType (CardTypes.Creature))
+					continue;			
 				ci.UpdatePowerAndToughness ();
-				if (CardInstance.PointOverlayVBO?.InstancedDatas?.Length > 0)
-					ci.UpdateOverlaySurface ();
+				ci.UpdatePointsOverlaySurface ();
+				ci.CheckAbilityChanges ();
+				if (ci.AbilityChangesDetected)					
+					ci.UpdateInfoOverlaySurface ();				
 			}			
-		}
-		public void processRendering()
-		{
-			if (!DecksLoaded)
-				return;
-
-			foreach (Player p in Players) {
-				p.Render ();
-			}
 		}
 	}
 }

@@ -1,12 +1,12 @@
 ﻿<?xml version="1.0" encoding="UTF-8" ?>
 <Container VerticalAlignment="Top" Margin="10" Width="200" Height="100" >
-	<Border BorderWidth="1" CornerRadius="10" Focusable="true"
+	<Border BorderWidth="2" CornerRadius="10" Focusable="true" Foreground="LightGray"
 			MouseClick="PlayerPanel_MouseClick"
 			MouseEnter="{Foreground=White}"
-			MouseLeave="{Foreground=Gray}">
+			MouseLeave="{Foreground=LightGray}">
 		<Group Margin="5" Background="0.2,0.2,0.2,0.7">
 			<HorizontalStack Height="Fit" VerticalAlignment="Top">
-				<Border BorderWidth="1" Margin="2" CornerRadius="5" Width="30" Height="30" Foreground="Ivory"
+				<Border BorderWidth="1" Margin="2" CornerRadius="0" Width="30" Height="30" Foreground="Ivory"
 					Background="0.8,0.8,0.8,0.2">
 	<!--				<Image Name="pic"  Path="image2/normal.svg"/>-->
 				</Border>

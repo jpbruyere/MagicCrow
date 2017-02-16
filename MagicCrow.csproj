@@ -149,6 +149,7 @@
     <Compile Include="src\RenderCache.cs" />
     <Compile Include="src\Deck.cs" />
     <Compile Include="src\TextScrollerWidget.cs" />
+    <Compile Include="src\MembersView.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ui\mainMenu.iml" />
@@ -382,12 +383,27 @@
     <EmbeddedResource Include="shaders\fireCircle.frag" />
     <EmbeddedResource Include="shaders\colorWheel.frag" />
     <EmbeddedResource Include="shaders\water2.frag" />
+    <EmbeddedResource Include="ui\ComboBox.template">
+      <LogicalName>Crow.ComboBox.template</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ui\AbilityItemFull.Template" />
+    <EmbeddedResource Include="shaders\ghostbuster.frag" />
+    <EmbeddedResource Include="ui\MemberView.crow" />
+    <EmbeddedResource Include="ui\MembersView.template">
+      <LogicalName>MagicCrow.MembersView.template</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <None Include="cardsfolder.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="images\marble1.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="images\splash.jpg">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="images\stormCrow.jpg">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

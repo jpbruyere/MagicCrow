@@ -58,7 +58,8 @@ namespace MagicCrow
 
 		const float attachedCardsSpacing = 0.03f;
 
-
+		int _power = int.MinValue;
+		int _toughness = int.MinValue;
 		bool _isTapped = false;
 		bool _combating;
 		Player _controler;
@@ -68,10 +69,35 @@ namespace MagicCrow
         public CardGroup CurrentGroup;
 		public bool HasFocus = false;
 		public bool hasSummoningSickness = false;
+		public bool IsToken = false;
+		public bool Kicked = false;
 
 		public String Name {
 			get { return Model.Name; }
 		}
+		public Player Controler
+		{
+			get
+			{
+				return _controler ?? _originalControler;
+			}
+			set { _originalControler = value; }
+		}
+		public int 	Power
+		{
+			get
+			{
+				return _power == int.MinValue ? Model.Power : _power;
+			}
+		}
+		public int Toughness
+		{
+			get
+			{
+				return _toughness == int.MinValue ? Model.Toughness : _toughness;
+			}
+		}
+
 		public bool HasSummoningSickness {
 			get { return hasSummoningSickness; }
 			set {
@@ -99,8 +125,6 @@ namespace MagicCrow
 			}
 		}
 
-		public bool IsToken = false;
-		public bool Kicked = false;
 
 		public IList<EffectGroup> PumpEffect = new List<EffectGroup> ();
 		public IList<EffectGroup> Effects{
@@ -158,7 +182,7 @@ namespace MagicCrow
             if (Toughness < 1)
                 PutIntoGraveyard();
             else
-                UpdateOverlaySurface();
+                UpdatePointsOverlaySurface();
         }
 		public void ChangeZone(CardGroupEnum _newZone){			
 			CardGroupEnum _oldZone = CurrentGroup.GroupName;
@@ -197,7 +221,7 @@ namespace MagicCrow
 						OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, PointOverlayBmp);
 					GL.BindTexture(TextureTarget.Texture2DArray, 0);
 
-					UpdateOverlaySurface ();
+					UpdatePointsOverlaySurface ();
 				}else if (_oldZone == CardGroupEnum.InPlay) {
 					PointOverlayVBO.RemoveInstance (pointOverlayVboIdx);
 					if (PointOverlayVBO.InstancedDatas.Length > 0) {
@@ -224,7 +248,7 @@ namespace MagicCrow
 					}
 					pointOverlayVboIdx = -1;
 					PointOverlayVBO.UpdateVBO ();
-					UpdateOverlaySurface ();
+					UpdatePointsOverlaySurface ();
 				}
 
 			}
@@ -485,30 +509,6 @@ namespace MagicCrow
 			}
 			return _controler != null;
 		}
-		public Player Controler
-		{
-			get
-			{
-				return _controler ?? _originalControler;
-			}
-			set { _originalControler = value; }
-		}
-		int _power = int.MinValue;
-		int _toughness = int.MinValue;
-		public int 	Power
-        {
-            get
-            {
-				return _power == int.MinValue ? Model.Power : _power;
-            }
-        }
-        public int Toughness
-        {
-            get
-            {
-				return _toughness == int.MinValue ? Model.Toughness : _toughness;
-            }
-        }
 
 		#region layouting
 		//TODO: create function for attached card position update instead of
@@ -750,71 +750,177 @@ namespace MagicCrow
 		}
 		#endregion
 
-		#region Overlay
-		public void UpdateOverlayAbilities()
-		{
-//			int x = 0;
-//			int y = 0;
-//
-//			Bitmap bmp = new Bitmap(pointOverlayWidth, pointOverlayHeight, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-//			BitmapData data = bmp.LockBits(new System.Drawing.Rectangle(x, y, pointOverlayWidth, pointOverlayHeight),
-//				ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-//
-//			int stride = 4 * pointOverlayWidth;
-//
-//			using (ImageSurface draw =
-//				new ImageSurface(data.Scan0, Format.Argb32, pointOverlayWidth, pointOverlayHeight, stride))
-//			{
-//				using (Context gr = new Context(draw))
-//				{
-//					Cairo.Rectangle r = new Cairo.Rectangle(0, 0, pointOverlayWidth, pointOverlayHeight);
-//					gr.SetSourceRGB (1,1,1);
-//					gr.Rectangle (r);
-//
-//					gr.Fill();
-//					gr.Scale (0.45, 0.45);
-//
-//					foreach (AbilityEnum ae in getAllAbilities ().Select (a => a.AbilityType).Distinct ()) {
-//						MagicData.hSVGsymbols.RenderCairoSub (gr, "#" + ae.ToString());
-//						gr.Translate (100, 0);
-//					}
-//
-//
-//					draw.Flush();
-//				}
-//				//draw.WriteToPng(@"d:/test.png");
-//			}
-//			imgHelpers.imgHelpers.flipY(data.Scan0, stride, pointOverlayHeight);
-//
-//			if (abilitiesTexture == 0)
-//			{
-//				GL.GenTextures(1, out abilitiesTexture);
-//				GL.BindTexture(TextureTarget.Texture2D, abilitiesTexture);
-//				GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, data.Width, data.Height, 0,
-//					OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
-//				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
-//				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
-////				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
-////				GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
-//			}
-//			else
-//			{				
-//				GL.BindTexture(TextureTarget.Texture2D, abilitiesTexture);
-//				GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, pointOverlayWidth, pointOverlayHeight,
-//					OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, data.Scan0);
-//			}
-//			GL.BindTexture (TextureTarget.Texture2D, 0);
-//			//bmp.Save(@"d:/test.png");
-//			bmp.UnlockBits(data);
-		}
+		#region Overlays
 		int _lastPaintedPower = int.MinValue, _lastPaintedToughness = int.MinValue;
+		IEnumerable<AbilityEnum> _lastKnownAbilities;
+		public bool AbilityChangesDetected = false;
 
-		public void UpdateOverlaySurface()
+		/// <summary>
+		/// return true if abs has changes
+		/// </summary>
+		public void CheckAbilityChanges(){
+			IEnumerable<AbilityEnum> abs = getAllAbilities ().Select (a => a.AbilityType).Distinct ();
+			int abCount = abs.Count ();
+
+			if (abCount > 0) {
+				if (infoOverlayVboIdx < 0) {
+					_lastKnownAbilities = abs;
+					createInfoOverlay ();
+					return;
+				}
+			} else if (infoOverlayVboIdx >= 0) {
+				removeInfoOverlay ();
+				_lastKnownAbilities = null;
+				return;
+			} else
+				return;
+
+
+			int lkCount = _lastKnownAbilities.Count ();
+				
+			if (lkCount != abCount) {
+				_lastKnownAbilities = abs;
+				AbilityChangesDetected = true;
+				return;
+			}
+
+			IEnumerator<AbilityEnum> e_abs = abs.GetEnumerator ();
+			IEnumerator<AbilityEnum> e_lk_abs = abs.GetEnumerator ();
+
+			while (e_abs.MoveNext ()) {
+				e_lk_abs.MoveNext ();
+				if (e_abs.Current == e_lk_abs.Current)
+					continue;
+				AbilityChangesDetected = true;
+				break;
+			}
+
+			_lastKnownAbilities = abs;
+		}
+		/// <summary>
+		/// Creates vbo instance and overlay bitmap.
+		/// </summary>
+		void createInfoOverlay(){
+			AbilityChangesDetected = true;
+			infoOverlayVboIdx = InfoOverlayVBO.AddInstance ();
+			InfoOverlayVBO.UpdateVBO ();
+			byte[] newPObmp = new byte[infoOverlayWidth * infoOverlayHeight * 4 * 
+				InfoOverlayVBO.InstancedDatas.Length];
+			if (InfoOverlayBmp != null)
+				Array.Copy (InfoOverlayBmp, newPObmp, InfoOverlayBmp.Length);
+
+			InfoOverlayBmp = newPObmp;
+
+			if (!GL.IsTexture (InfoOverlayTexture)) {
+				InfoOverlayTexture = GL.GenTexture ();
+				GL.BindTexture(TextureTarget.Texture2DArray, InfoOverlayTexture);
+				GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+				GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+				GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureWrapR, (int)TextureWrapMode.ClampToEdge);
+			}else
+				GL.BindTexture(TextureTarget.Texture2DArray, InfoOverlayTexture);
+
+			GL.TexImage3D (TextureTarget.Texture2DArray, 0, PixelInternalFormat.Rgba,
+				infoOverlayWidth, infoOverlayHeight, InfoOverlayVBO.InstancedDatas.Length, 0,
+				OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, InfoOverlayBmp);
+			GL.BindTexture(TextureTarget.Texture2DArray, 0);
+
+			UpdateInfoOverlaySurface ();
+		}
+		void removeInfoOverlay(){
+			AbilityChangesDetected = false;
+			InfoOverlayVBO.RemoveInstance (infoOverlayVboIdx);
+			if (InfoOverlayVBO.InstancedDatas.Length > 0) {
+				foreach (CardInstance ci in Magic.CurrentGameWin.Players.SelectMany(p => p.InPlay.Cards.Where(c => c.infoOverlayVboIdx>0))) {
+					if (ci == this)
+						continue;
+					if (ci.infoOverlayVboIdx > infoOverlayVboIdx) {
+						ci.infoOverlayVboIdx--;
+						ci.updateInfoOverlayDatas ();
+					}
+				}
+				int oSize = infoOverlayWidth * infoOverlayHeight * 4;
+				byte[] newPObmp = new byte[oSize * InfoOverlayVBO.InstancedDatas.Length];
+				Array.Copy (InfoOverlayBmp, 0, newPObmp, 0, oSize * infoOverlayVboIdx);
+				Array.Copy (InfoOverlayBmp, oSize * (infoOverlayVboIdx + 1), newPObmp, oSize * infoOverlayVboIdx,
+					oSize * (InfoOverlayVBO.InstancedDatas.Length - infoOverlayVboIdx - 1));
+
+				InfoOverlayBmp = newPObmp;
+				GL.BindTexture(TextureTarget.Texture2DArray, InfoOverlayTexture);
+				GL.TexImage3D (TextureTarget.Texture2DArray, 0, PixelInternalFormat.Rgba,
+					infoOverlayWidth, infoOverlayHeight, InfoOverlayVBO.InstancedDatas.Length, 0,
+					OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, InfoOverlayBmp);
+				GL.BindTexture(TextureTarget.Texture2DArray, 0);
+			}
+			infoOverlayVboIdx = -1;
+			InfoOverlayVBO.UpdateVBO ();
+			UpdateInfoOverlaySurface ();
+		}
+		/// <summary>
+		/// Cairo surface draw of Abilities for this instance and
+		/// update texture subData
+		/// </summary>
+		public void UpdateInfoOverlaySurface()
 		{
+			if (!AbilityChangesDetected)
+				return;
+			AbilityChangesDetected = false;
+
+			Magic.AddLog ("DEBUG => UPDATE INFO OVERLAY SURF : " + this.Name);
+			int x = 0;
+			int y = infoOverlayVboIdx * infoOverlayHeight;
+
+			int stride = 4 * infoOverlayWidth;
+
+			using (ImageSurface draw =
+				new ImageSurface(InfoOverlayBmp, Format.Argb32,
+					infoOverlayWidth, infoOverlayHeight * InfoOverlayVBO.InstancedDatas.Length, stride))
+			{
+				using (Context gr = new Context(draw))
+				{
+					Cairo.Rectangle r = new Cairo.Rectangle(x, y, infoOverlayWidth, infoOverlayHeight);
+
+					//gr.SetSourceRGBA (1,1,1,1);
+					//gr.Rectangle(r);
+					//gr.FillPreserve();
+					//gr.SetSourceRGB (0.9f,0.2f,0.2f);
+					//gr.LineWidth = 2.0f;
+					//gr.Stroke();
+
+					gr.Translate (0, y);
+					gr.Scale (0.34, 0.32);
+					using (IEnumerator<AbilityEnum> e = _lastKnownAbilities.GetEnumerator()){
+						while (e.MoveNext ()) {
+							MagicData.hSVGsymbols.RenderCairoSub (gr, "#" + e.Current.ToString ());
+							gr.Translate (100, 0);
+						}
+					}
+
+					draw.Flush();
+				}
+			}
+
+			GL.BindTexture(TextureTarget.Texture2DArray, InfoOverlayTexture);
+			int oSize = infoOverlayWidth * infoOverlayHeight * 4;
+			byte[] tmp = new byte[oSize];
+			Array.Copy (InfoOverlayBmp, infoOverlayVboIdx * oSize, tmp, 0, oSize);
+			GL.TexSubImage3D (TextureTarget.Texture2DArray, 0, 0, 0, infoOverlayVboIdx, infoOverlayWidth, infoOverlayHeight, 1,
+				OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, tmp);
+			GL.BindTexture(TextureTarget.Texture2DArray, 0);
+		}
+		/// <summary>
+		/// Cairo surface draw of Power/Touchness for this instance and
+		/// update texture subData
+		/// </summary>
+		public void UpdatePointsOverlaySurface()
+		{
+			Magic.AddLog ("DEBUG => ********* CALL UPDATE POINT OVERLAY SURF : " + this.Name);
 			if (pointOverlayVboIdx < 0)
 				return;
+			#if DEBUG
 			if (!(this.HasType (CardTypes.Creature) && CurrentGroup.GroupName == CardGroupEnum.InPlay))
-				return;
+				Debugger.Break ();
+			#endif
 
 			if (Power == _lastPaintedPower && Toughness == _lastPaintedToughness)
 				return;
@@ -836,22 +942,22 @@ namespace MagicCrow
 				{
 					Cairo.Rectangle r = new Cairo.Rectangle(x, y, pointOverlayWidth, pointOverlayHeight);
 
+					gr.SetSourceRGB (1,1,1);
+					gr.Rectangle(r);
+					gr.FillPreserve();
+					gr.SetSourceRGB (0.2f,0.2f,0.2f);
+					gr.LineWidth = 2.0f;
+					gr.Stroke();
+
+					gr.SelectFontFace("Times New Roman", FontSlant.Normal, FontWeight.Bold);
+					gr.SetFontSize(38);
+
 					if (Damages.Count == 0)
-						gr.SetSourceRGB (1,1,1);
+						gr.SetSourceRGB (0.2f,0.2f,0.2f);
 					else
 						gr.SetSourceRGB (1.0f,0.3f,0.4f);
 
-					gr.Rectangle(r);
-					gr.FillPreserve();
-					gr.SetSourceRGB (0,0,0);
-					gr.LineWidth = 1.5f;
-					gr.Stroke();
-
-					gr.SelectFontFace("Droid", FontSlant.Normal, FontWeight.Bold);
-					gr.SetFontSize(44);
-					gr.SetSourceRGB (0.2f,0.2f,0.2f);
-
-					string text = Power.ToString() + " / " + Toughness.ToString();
+					string text = Power.ToString() + "/" + Toughness.ToString();
 
 					FontExtents fe = gr.FontExtents;
 					TextExtents te = gr.TextExtents(text);
@@ -873,8 +979,6 @@ namespace MagicCrow
 				OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, tmp);
 			GL.BindTexture(TextureTarget.Texture2DArray, 0);
 			//bmp.Save(@"d:/test.png");
-
-			UpdateOverlayAbilities ();
 		}
 		public void ResetOverlay()
 		{

@@ -120,7 +120,7 @@ namespace MagicCrow
 		}
 		public string TargetPrompt {
 			get {
-				return string.IsNullOrWhiteSpace (targetPrompt) ? "\tSelect " + ValidTargets.ToString () : targetPrompt;
+				return string.IsNullOrWhiteSpace (targetPrompt) ? "\tSelect " + ValidTargets?.ToString () : targetPrompt;
 			}
 			set {
 				targetPrompt = value;

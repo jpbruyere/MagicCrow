@@ -1,38 +1,41 @@
 ﻿<?xml version="1.0" encoding="UTF-8" ?>
-<Border BorderWidth="2"	CornerRadius="10" Width="50%" Height="60%" Background="0.2,0.2,0.2,0.7">
-	<HorizontalStack>
-		<VerticalStack Width="40%"  Margin="10" Background="0.2,0.2,0.2,0.9">
-			<Label Text="Player 1" Font="MagicMedieval, 22" />
-			<ComboBox
-				SelectedItemChanged="onP1DeckChanged"
-				Data="{DeckList}"
-				ItemTemplate="#MagicCrow.ui.DeckItem.Template"
-				SelectedIndex="{²P1DeckIdx}">
-			</ComboBox>	
-		</VerticalStack>		
-		<VerticalStack Spacing="10" Height="Fit">
-			<Button 
-				Caption="New Game"
-				MouseClick="onStartNewGame"/>
-			<Button 
-				Caption="Decks"
-				MouseClick="onShowDecks"/>
-			<Button 
-				Caption="Cards"
-				MouseClick="onShowCards"/>
-			<Button 
-				Caption="Exit"
-				MouseClick="onButExit_MouseClick" />
-		</VerticalStack>
-		<VerticalStack Width="40%" Margin="10" Background="Jet">
-			<Label Text="Player 2" Font="MagicMedieval, 22" />
-			<ComboBox
-				SelectedItemChanged="onP2DeckChanged"
-				Data="{DeckList}"
-				ItemTemplate="#MagicCrow.ui.DeckItem.Template"
-				SelectedIndex="{²P2DeckIdx}">
-			</ComboBox>	
-		</VerticalStack>		
-	</HorizontalStack>
+<Border BorderWidth="2"	CornerRadius="20" Foreground="White" Width="70%" Height="60%" Background="images/splash.jpg">
+	<VerticalStack Margin="20">
+		<Label Margin="5" Text="Magic Crow" Font="MagicMedieval bold, 60" Foreground="1.0,1.0,1.0,1.0"/>
+		<HorizontalStack>
+			<VerticalStack Width="35%"  Margin="10" >
+				<Label Text="Player 1" Font="MagicMedieval, 26" />
+				<ComboBox Font="MagicMedieval, 14"
+					SelectedItemChanged="onP1DeckChanged"
+					Data="{DeckList}"
+					ItemTemplate="#MagicCrow.ui.DeckItem.Template"
+					SelectedIndex="{²P1DeckIdx}">
+				</ComboBox>	
+			</VerticalStack>		
+			<VerticalStack Margin="10" Spacing="10" Height="Fit" Background="1.0,1.0,1.0,0.2">
+				<Button Style="butMenu"
+					Caption="New Game"
+					MouseClick="onStartNewGame"/>
+				<Button Style="butMenu" 
+					Caption="Decks"
+					MouseClick="onShowDecks"/>
+				<Button Style="butMenu"
+					Caption="Cards"
+					MouseClick="onShowCards"/>
+				<Button Style="butMenu"
+					Caption="Exit"
+					MouseClick="onButExit_MouseClick" />
+			</VerticalStack>
+			<VerticalStack Width="35%" Margin="10">
+				<Label Text="Player 2" Font="MagicMedieval, 26" />
+				<ComboBox Font="MagicMedieval, 14"
+					SelectedItemChanged="onP2DeckChanged"
+					Data="{DeckList}"
+					ItemTemplate="#MagicCrow.ui.DeckItem.Template"
+					SelectedIndex="{²P2DeckIdx}">
+				</ComboBox>	
+			</VerticalStack>		
+		</HorizontalStack>
+	</VerticalStack>
 </Border>
 
