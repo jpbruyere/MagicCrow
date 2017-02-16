@@ -99,7 +99,6 @@
     <Compile Include="src\engine\Abilities.cs" />
     <Compile Include="src\engine\Ability.cs" />
     <Compile Include="src\engine\AbilityActivation.cs" />
-    <Compile Include="src\engine\Attribut.cs" />
     <Compile Include="src\engine\CardCounter.cs" />
     <Compile Include="src\engine\CardTarget.cs" />
     <Compile Include="src\engine\Cost.cs" />
@@ -150,6 +149,7 @@
     <Compile Include="src\Deck.cs" />
     <Compile Include="src\TextScrollerWidget.cs" />
     <Compile Include="src\MembersView.cs" />
+    <Compile Include="src\engine\AttributGroup.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ui\mainMenu.iml" />

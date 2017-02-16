@@ -16,6 +16,23 @@
 				<TextBox Margin="1" Text="{²Value}" Height="Fit" Width="50%"/>
 			</HorizontalStack>
 		</ItemTemplate>
+		<ItemTemplate DataType="MagicCrow.AttributGroup`1[MagicCrow.CardTypes]">
+			<HorizontalStack Focusable="true"  Height="Fit" Spacing="0"
+					MouseEnter="{Background=UnitedNationsBlue}"
+					MouseLeave="{Background=Transparent}" >
+				<Label Margin="1" Text="{Name}" Height="Fit" Width="50%"/>
+				<ListBox Data="{²Value}" Focusable="true"  Height="Fit" Background="White">
+					<Template>
+						<VerticalStack Name="ItemsContainer" Height="Fit" MinimumSize="1,1"/>
+					</Template>
+					<ItemTemplate>
+						<ComboBox EnumDatas="MagicCrow.CardTypes" SelectedIndex="{²}"
+								MouseEnter="{Background=UnitedNationsBlue}"
+								MouseLeave="{Background=Transparent}"/>						
+					</ItemTemplate>
+				</ListBox>
+			</HorizontalStack>
+		</ItemTemplate>
 		<ItemTemplate DataType="System.Collections.Generic.List`1[MagicCrow.Ability]">
 			<ListBox Data="{²Value}" Focusable="true"  Height="Fit" 
 					MouseEnter="{Background=UnitedNationsBlue}"
@@ -111,6 +128,5 @@
 				</Popper>
 			</HorizontalStack>
 		</ItemTemplate>
-
 	</MembersView>
 </Window>

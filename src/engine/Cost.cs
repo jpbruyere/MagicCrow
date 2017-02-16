@@ -22,7 +22,7 @@ namespace MagicCrow
     public class CardCost : Cost
     {
         public int Count = 0;
-		public MultiformAttribut<Target> validTargets = new MultiformAttribut<Target>();
+		public AttributGroup<Target> validTargets = new AttributGroup<Target>();
 
         public CardCost(CostTypes _type)
             : base(_type)
@@ -46,12 +46,12 @@ namespace MagicCrow
 			}
 			cc.validTargets = CardTarget.ParseTargets (tmp [1]);
 			if (cc.CostType == CostTypes.Discard) {
-				foreach (CardTarget c in cc.validTargets.Values.OfType<CardTarget>()) {
+				foreach (CardTarget c in cc.validTargets.OfType<CardTarget>()) {
 					c.ValidGroup += CardGroupEnum.Hand;
 					c.Controler = ControlerType.You;
 				}
 			} else {
-				foreach (CardTarget c in cc.validTargets.Values.OfType<CardTarget>()) {
+				foreach (CardTarget c in cc.validTargets.OfType<CardTarget>()) {
 					c.ValidGroup += CardGroupEnum.InPlay;
 					c.Controler = ControlerType.You;
 				}
@@ -76,7 +76,7 @@ namespace MagicCrow
 			get { return this; }
 		}
 		public override int RequiredTargetCount { get { return Count; }}
-		public override MultiformAttribut<Target> ValidTargets {
+		public override AttributGroup<Target> ValidTargets {
 			get { return validTargets; }
 			set { validTargets = value;	}
 		}
@@ -84,7 +84,7 @@ namespace MagicCrow
 		public override Cost Pay(ref CardInstance ci, CardInstance source){
 			CardCost tmp = this.Clone () as CardCost;
 			if (ValidTargets != null) {
-				foreach (CardTarget t in ValidTargets.Values.OfType<CardTarget>()) {
+				foreach (CardTarget t in ValidTargets.OfType<CardTarget>()) {
 					if (t.Accept (ci, source)) {
 						tmp.Count--;
 						if (this.CostType == CostTypes.Discard || this.CostType == CostTypes.Sacrifice )
@@ -499,7 +499,7 @@ namespace MagicCrow
 			get { return null; }
 		}
 		public virtual int RequiredTargetCount { get { return 0; }}
-		public virtual MultiformAttribut<Target> ValidTargets {
+		public virtual AttributGroup<Target> ValidTargets {
 			get { return null; }
 			set { throw new NotImplementedException(); }
 		}
@@ -702,9 +702,9 @@ namespace MagicCrow
 				return tmp;
 			}
 		}
-		public override MultiformAttribut<Target> ValidTargets {
+		public override AttributGroup<Target> ValidTargets {
 			get {
-				MultiformAttribut<Target> tmp = new MultiformAttribut<Target> (AttributeType.Composite);
+				AttributGroup<Target> tmp = new AttributGroup<Target> (AttributeType.Composite);
 				foreach (CardCost cc in CostList.OfType<CardCost>()) {
 					tmp += cc.ValidTargets;
 				}

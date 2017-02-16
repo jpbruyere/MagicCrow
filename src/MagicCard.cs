@@ -30,7 +30,7 @@ namespace MagicCrow
 		public string FilePath;
         public string Name;
         public Cost Cost;
-        public MultiformAttribut<CardTypes> Types = new MultiformAttribut<CardTypes>();
+        public AttributGroup<CardTypes> Types = new AttributGroup<CardTypes>();
         public List<Ability> Abilities = new List<Ability>();
         public List<Trigger> Triggers = new List<Trigger>();
 		public List<EffectGroup> SpellEffects = new List<EffectGroup> ();
@@ -47,7 +47,7 @@ namespace MagicCrow
         
         public string S = "";
         public string AlternateMode = "";
-        public MultiformAttribut<ManaTypes> Colors;
+        public AttributGroup<ManaTypes> Colors;
         public string Loyalty = "";
         public string HandLifeModifier = "";
         public string DeckHints = "";
@@ -205,7 +205,7 @@ namespace MagicCrow
 			FilePath = "";
 			Name = "";
 			Cost = null;
-			Types = new MultiformAttribut<CardTypes>();
+			Types = new AttributGroup<CardTypes>();
 			Abilities = new List<Ability>();
 			Triggers = new List<Trigger>();
 			SpellEffects = new List<EffectGroup> ();

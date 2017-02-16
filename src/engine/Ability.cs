@@ -41,7 +41,7 @@ namespace MagicCrow
 
 		int _requiredTargetCount = -1;
 		string targetPrompt = "";
-		MultiformAttribut<Target> _validTargets;
+		AttributGroup<Target> _validTargets;
 		List<Object> _selectedTargets = new List<object> ();
 		public Trigger Trigger;
 		public AbilityCategory Category;
@@ -108,7 +108,7 @@ namespace MagicCrow
 					_requiredTargetCount > 0; 
 			} 
 		}			
-		public MultiformAttribut<Target> ValidTargets {
+		public AttributGroup<Target> ValidTargets {
 			get { return _validTargets; }
 			set { _validTargets = value; }
 		}			
@@ -795,7 +795,7 @@ namespace MagicCrow
 					break;
 				case AbilityFieldsEnum.ChangeType:
 					a.ValidTargets = Target.ParseTargets (value);
-					foreach (CardTarget ct in a.ValidTargets.Values.OfType<CardTarget>()) {
+					foreach (CardTarget ct in a.ValidTargets.OfType<CardTarget>()) {
 						ct.ValidGroup += a.Effects.OfType<ChangeZoneEffect>().LastOrDefault().Origin;
 					}
 					break;
@@ -1476,7 +1476,7 @@ namespace MagicCrow
 				if (a.ValidTargets == null)
 					a.ValidTargets = new CardTarget (TargetType.Card) { ValidGroup = validCardTargetZoneFix };
 				else {
-					foreach (CardTarget ct in a.ValidTargets.Values.OfType<CardTarget>()) {
+					foreach (CardTarget ct in a.ValidTargets.OfType<CardTarget>()) {
 						ct.ValidGroup += validCardTargetZoneFix;
 					}
 				}
@@ -1489,7 +1489,7 @@ namespace MagicCrow
 				if (a.ValidTargets == null)
 					a.ValidTargets += stackTargets;
 				else {
-					foreach (CardTarget trg in a.ValidTargets.Values.OfType<CardTarget>()) {
+					foreach (CardTarget trg in a.ValidTargets.OfType<CardTarget>()) {
 						trg.TypeOfTarget = stackTargets;
 					}
 				}

@@ -18,77 +18,37 @@ namespace MagicCrow
         Exclude
     }
 	[Serializable]
-	public class MultiformAttribut<T> : IComparable
-    {
-        public List<T> Values = new List<T>();
-        public AttributeType attributeType;
+	public class AttributGroup<T> : List<T>, IComparable
+    {        
+        public AttributeType attributeType = AttributeType.Composite;
 
-		public MultiformAttribut(AttributeType at, params T[] list)
+		public AttributGroup(AttributeType at, params T[] list):base(list)
         {
             attributeType = at;
-
-			foreach (T i in list)
-				AddValue (i);		
         }
-		public MultiformAttribut(params T[] list)
-		{
-			attributeType = AttributeType.Composite;
+		public AttributGroup(params T[] list) : base (list){}
+		public AttributGroup(){}
 
-			foreach (T i in list)
-				AddValue (i);
-		}
-		public MultiformAttribut(){}
-
-		MultiformAttribut<T> Clone
+		AttributGroup<T> Clone
 		{
 			get { 
-				return new MultiformAttribut<T> (this.attributeType, this.Values.ToArray());
+				return new AttributGroup<T> (this.attributeType, this.ToArray());
 			}
-		}
-		void AddValue(T a)
-		{
-			if (a != null)
-				Values.Add (a);
-		}
-
-        public int Count
-        {
-            get { return Values.Count; }
-        }
-        public T Value
-        {
-            get
-            {
-                if (Values.Count == 0)
-                    return default(T);
-                if (Values.Count == 1)
-                    return Values[0];
-                //?
-                return Values.FirstOrDefault();
-            }
-            set
-            {
-                Values.Add(value);
-            }
-        }
-        public bool Contains(T a)
-        {
-            return Values.Contains(a) ? true : false;
-        }
+		}      
 
 		#region operators
-		public static implicit operator MultiformAttribut<T>(T a)
+		public static implicit operator AttributGroup<T>(T a)
 		{
-			return new MultiformAttribut<T> (a);
+			return new AttributGroup<T> (a);
 		}
 
-		public static MultiformAttribut<T> operator +(MultiformAttribut<T> ma, T a)
+		public static AttributGroup<T> operator +(AttributGroup<T> ma, T a)
         {
 			if (!(ma?.Count > 0))
-				return a == null ? null : new MultiformAttribut<T> (a);
+				return a == null ? null : new AttributGroup<T> (a);
 			if (ma.attributeType == AttributeType.Composite) {
-				MultiformAttribut<T> tmp = ma.Clone;
-				tmp.AddValue (a);
+				AttributGroup<T> tmp = ma.Clone;
+				tmp.Add (a);
 				return tmp;
 			} else if (a == null)
 				return ma.Clone;
@@ -96,7 +56,7 @@ namespace MagicCrow
 				return null;
 
         }
-		public static MultiformAttribut<T> operator +(MultiformAttribut<T> ma1, MultiformAttribut<T> ma2)
+		public static AttributGroup<T> operator +(AttributGroup<T> ma1, AttributGroup<T> ma2)
 		{
 			if (ma1 == null)
 				return ma2;
@@ -104,22 +64,15 @@ namespace MagicCrow
 				return ma1;
 			if (ma1.attributeType != ma2.attributeType)
 				throw new Exception ("incompatible multiform attribute");
-			return new MultiformAttribut<T> (ma1.attributeType, ma1.Values.Concat (ma2.Values).ToArray());
+			return new AttributGroup<T> (ma1.attributeType, ma1.Concat (ma2).ToArray());
 		}
-
-//		public static MultiformAttribut<T> operator +(T a, MultiformAttribut<T> ma)
-//		{
-//			if (ma == null)
-//				return a == null ? null : a;
-//			return ma.Clone.AddValue (a);
-//		}
-		public static MultiformAttribut<T> operator |(MultiformAttribut<T> ma, T a)
+		public static AttributGroup<T> operator |(AttributGroup<T> ma, T a)
 		{
 //			if (ma == null)
 //				return a == null ? null : new MultiformAttribut<T> (a);
 			if (ma.attributeType == AttributeType.Choice) {
-				MultiformAttribut<T> tmp = ma.Clone;
-				tmp.AddValue (a);
+				AttributGroup<T> tmp = ma.Clone;
+				tmp.Add (a);
 				return tmp;
 			} else if (a == null)
 				return ma.Clone;
@@ -129,12 +82,12 @@ namespace MagicCrow
 //				new MultiformAttribut<MultiformAttribut<T>>(AttributeType.Choice,
 //				ma.Clone, new MultiformAttribut<T> (a));
 		}
-        public static bool operator ==(MultiformAttribut<T> a1, MultiformAttribut<T> a2)
+        public static bool operator ==(AttributGroup<T> a1, AttributGroup<T> a2)
         {
 			try {
-				foreach (T i in a1.Values)
+				foreach (T i in a1)
 				{
-					foreach (T j in a2.Values)
+					foreach (T j in a2)
 					{
 						if (EqualityComparer<T>.Default.Equals(i, j))
 						{
@@ -151,12 +104,12 @@ namespace MagicCrow
 				return object.Equals(a1,a2);
 			}
         }
-        public static bool operator !=(MultiformAttribut<T> a1, MultiformAttribut<T> a2)
+        public static bool operator !=(AttributGroup<T> a1, AttributGroup<T> a2)
         {
 			try {
-	            foreach (T i in a1.Values)
+	            foreach (T i in a1)
 	            {
-	                foreach (T j in a2.Values)
+	                foreach (T j in a2)
 	                {
 	                    if (EqualityComparer<T>.Default.Equals(i, j))
 	                    {
@@ -173,41 +126,41 @@ namespace MagicCrow
 				return !object.Equals(a1,a2);
 			}
 		}
-        public static bool operator ==(MultiformAttribut<T> a, T v)
+        public static bool operator ==(AttributGroup<T> a, T v)
         {
 			if (a == null)
 				return v == null ? true : false;
-			foreach (T i in a.Values)
+			foreach (T i in a)
             {
                 if (EqualityComparer<T>.Default.Equals(i, v))
                     return true;
             }
             return false;
         }
-        public static bool operator !=(MultiformAttribut<T> a, T v)
+        public static bool operator !=(AttributGroup<T> a, T v)
         {
 			if (a == null)
 				return v == null ? false : true;
-            foreach (T i in a.Values)
+            foreach (T i in a)
             {
                 if (EqualityComparer<T>.Default.Equals(i, v))
                     return false;
             }
             return true;
         }
-		public static bool operator >=(MultiformAttribut<T> a1, MultiformAttribut<T> a2){
+		public static bool operator >=(AttributGroup<T> a1, AttributGroup<T> a2){
 			if (a2 == null)
 				return true;
 			if (a1 == null)
 				return false;
-			foreach (T j in a2.Values) {
+			foreach (T j in a2) {
 				if (!a1.Contains (j))
 					return false;
 			}
 			return true;
 		}
-		public static bool operator <=(MultiformAttribut<T> a1, MultiformAttribut<T> a2){
-			foreach (T j in a1.Values) {
+		public static bool operator <=(AttributGroup<T> a1, AttributGroup<T> a2){
+			foreach (T j in a1) {
 				if (!a2.Contains (j))
 					return false;
 			}
@@ -225,7 +178,7 @@ namespace MagicCrow
             if (attributeType == AttributeType.Choice)
                 separator = ",";
 
-            foreach (T i in Values)
+            foreach (T i in this)
             {
                 tmp += i.ToString() + separator;
             }

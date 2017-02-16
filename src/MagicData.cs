@@ -36,9 +36,9 @@ namespace MagicCrow
 
 		public static Rsvg.Handle hSVGsymbols;
 
-		public static MultiformAttribut<ManaTypes> ParseMultipleColors(string strColors)
+		public static AttributGroup<ManaTypes> ParseMultipleColors(string strColors)
 		{
-			MultiformAttribut<ManaTypes> result = new MultiformAttribut<ManaTypes> (AttributeType.Composite);
+			AttributGroup<ManaTypes> result = new AttributGroup<ManaTypes> (AttributeType.Composite);
 			string[] tmp = strColors.Split (',');
 			foreach (string s in tmp) {
 				result += (ManaTypes)Enum.Parse (typeof(ManaTypes), s);	

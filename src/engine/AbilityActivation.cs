@@ -91,7 +91,7 @@ namespace MagicCrow
 				return selectedTargets;
 			}
 		}
-		public override MultiformAttribut<Target> ValidTargets {
+		public override AttributGroup<Target> ValidTargets {
 			get {
 				return Source.ValidTargets;
 			}
@@ -122,7 +122,7 @@ namespace MagicCrow
 			//show library cards if needeed
 			if (WaitForTarget && ValidTargets != null) {
 				Library library = CardSource.Controler.Library;
-				if (ValidTargets.Values.OfType<CardTarget> ().Where
+				if (ValidTargets.OfType<CardTarget> ().Where
 				(cct => cct.ValidGroup == CardGroupEnum.Library).Count () > 0) {
 					if (!library.IsExpanded)
 						library.toogleShowAll ();
@@ -164,7 +164,7 @@ namespace MagicCrow
 			}
 
 			//other target group are possible, should change
-			foreach (Target ct in ValidTargets.Values)
+			foreach (Target ct in ValidTargets)
 			{
 				if (ct.Accept(target, CardSource)){
 					if (Source.Effects.AcceptTarget (target)) {

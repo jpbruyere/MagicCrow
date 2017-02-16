@@ -97,7 +97,7 @@ namespace MagicCrow
 		public abstract bool TryToAddTarget (object c);
 		public abstract void Validate ();
 		public abstract int RequiredTargetCount { get; }
-		public abstract MultiformAttribut<Target> ValidTargets { get; }
+		public abstract AttributGroup<Target> ValidTargets { get; }
 		public abstract List<Object> SelectedTargets { get; }
 		public abstract bool IsMandatory { get; }
 	}

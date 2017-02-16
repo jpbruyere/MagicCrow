@@ -290,7 +290,7 @@ namespace MagicCrow
 			foreach (CardInstance ci in MagicEngine.CurrentEngine.CardsInPlayHavingEffects) {
 				bool valid = false;
 				foreach (EffectGroup eg in ci.Effects) {
-					foreach (CardTarget ct in eg.Affected.Values.OfType<CardTarget>()) {
+					foreach (CardTarget ct in eg.Affected.OfType<CardTarget>()) {
 						if (!ct.Accept (this, ci)) {
 							valid = false;
 							break;
@@ -437,7 +437,7 @@ namespace MagicCrow
 			foreach (CardInstance ci in MagicEngine.CurrentEngine.CardsInPlayHavingEffects) {
 				bool valid = false;
 				foreach (EffectGroup eg in ci.Effects) {						
-					foreach (CardTarget ct in eg.Affected.Values.OfType<CardTarget>()) {
+					foreach (CardTarget ct in eg.Affected.OfType<CardTarget>()) {
 						if (!ct.Accept (this, ci)) {
 							valid = false;
 							break;
@@ -489,7 +489,7 @@ namespace MagicCrow
 			foreach (CardInstance ci in MagicEngine.CurrentEngine.CardsInPlayHavingEffect(EffectType.GainControl)) {
 				bool valid = false;
 				foreach (EffectGroup eg in ci.Effects) {						
-					foreach (CardTarget ct in eg.Affected.Values.OfType<CardTarget>()) {
+					foreach (CardTarget ct in eg.Affected.OfType<CardTarget>()) {
 						if (!ct.Accept (this, ci)) {
 							valid = false;
 							break;

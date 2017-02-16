@@ -107,9 +107,9 @@ namespace MagicCrow
 		}
 //		static List<string> list = new List<String> ();
 
-        public static MultiformAttribut<Target> ParseTargets(string str)
+        public static AttributGroup<Target> ParseTargets(string str)
         {
-            MultiformAttribut<Target> result = new MultiformAttribut<Target>(AttributeType.Choice);
+            AttributGroup<Target> result = new AttributGroup<Target>(AttributeType.Choice);
 
 			string[] tmp = str.Trim().Split(new char[] { ',' });
 			foreach (string t in tmp)

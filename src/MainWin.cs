@@ -77,7 +77,7 @@ namespace MagicCrow
 		float viewZangle, viewXangle;
 
 		public Vector4 vLight = new Vector4 (0.5f, 0.5f, -1f, 0f);
-		float[] clearColor = new float[] {0.5f,0.5f,0.9f,1.0f};
+		float[] clearColor = new float[] {0.2f,0.2f,0.6f,1.0f};
 
 		public static Vector3 vFocusedPoint {
 			get { return vEyeTarget + vLook * (eyeDist - 3f); }
@@ -413,9 +413,9 @@ namespace MagicCrow
 		}
 
 		void initInterface(){
-			MouseMove += Game_Mouse_Move;
-			MouseButtonDown += Game_Mouse_ButtonDown;
-			MouseWheelChanged += Game_Mouse_WheelChanged;
+			MouseMove += GL_Mouse_Move;
+			MouseButtonDown += GL_Mouse_ButtonDown;
+			MouseWheelChanged += GL_Mouse_WheelChanged;
 			KeyboardKeyDown += MainWin_KeyboardKeyDown;
 		}
 
@@ -916,12 +916,12 @@ namespace MagicCrow
 		#endregion
 
 		#region Mouse
-		void Game_Mouse_ButtonDown (object sender, OpenTK.Input.MouseButtonEventArgs e)
+		void GL_Mouse_ButtonDown (object sender, OpenTK.Input.MouseButtonEventArgs e)
 		{			
 			if (engine != null)
 				engine.processMouseDown (e);
 		}
-		void Game_Mouse_Move(object sender, OpenTK.Input.MouseMoveEventArgs e)
+		void GL_Mouse_Move(object sender, OpenTK.Input.MouseMoveEventArgs e)
 		{
 			if (e.XDelta != 0 || e.YDelta != 0)
 			{
@@ -950,7 +950,7 @@ namespace MagicCrow
 			}
 
 		}
-		void Game_Mouse_WheelChanged(object sender, OpenTK.Input.MouseWheelEventArgs e)
+		void GL_Mouse_WheelChanged(object sender, OpenTK.Input.MouseWheelEventArgs e)
 		{
 			float speed = ZoomSpeed;
 			if (Keyboard[OpenTK.Input.Key.ShiftLeft])

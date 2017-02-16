@@ -111,7 +111,7 @@ namespace MagicCrow
 					RequiredTargetCount : CurrentAbility.RequiredTargetCount;
 			}
 		}
-		public override MultiformAttribut<Target> ValidTargets {
+		public override AttributGroup<Target> ValidTargets {
 			get
 			{
 				return (CurrentAbility == null) ?

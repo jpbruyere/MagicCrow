@@ -13,7 +13,7 @@ namespace MagicCrow
 		public Cost CounterEffectCost;
 		public Trigger TrigStart;
 		public Trigger TrigEnd;
-		public MultiformAttribut<Target> Affected;
+		public AttributGroup<Target> Affected;
 
 		/// <summary>
 		/// Check if target is suitable for those types of effect
@@ -259,7 +259,7 @@ namespace MagicCrow
 				return null;
 			
 			MagicEngine engine = MagicEngine.CurrentEngine;
-			foreach (CardTarget ct in Affected.Values.OfType<CardTarget>()) {
+			foreach (CardTarget ct in Affected.OfType<CardTarget>()) {
 				foreach (CardInstance ci in ct.GetValidTargetsInPlay (_source))
 					temp.Add(ci);
 			}	

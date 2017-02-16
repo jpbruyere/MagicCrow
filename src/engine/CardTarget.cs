@@ -7,11 +7,11 @@ namespace MagicCrow
 	[Serializable]
 	public class CardTarget : Target
 	{
-		public MultiformAttribut<CardTypes> ValidCardTypes;
-		public MultiformAttribut<CardTypes> HavingAttachedCards;
-		public MultiformAttribut<Ability> HavingAbilities;
-		public MultiformAttribut<Ability> WithoutAbilities;
-		public MultiformAttribut<ManaTypes> ValidCardColors;
+		public AttributGroup<CardTypes> ValidCardTypes;
+		public AttributGroup<CardTypes> HavingAttachedCards;
+		public AttributGroup<Ability> HavingAbilities;
+		public AttributGroup<Ability> WithoutAbilities;
+		public AttributGroup<ManaTypes> ValidCardColors;
 		public ControlerType Controler = ControlerType.All;
 		public CombatImplication CombatState = CombatImplication.Unset;
 		public NumericConstrain PowerConstrain;
@@ -20,7 +20,7 @@ namespace MagicCrow
 		/// If false, origin card can't be targeted
 		/// </summary>
 		public bool CanBeTargetted = true;
-		public MultiformAttribut<CardGroupEnum> ValidGroup;
+		public AttributGroup<CardGroupEnum> ValidGroup;
 
 		public CardTarget(TargetType tt = TargetType.Card)
 		{
@@ -89,7 +89,7 @@ namespace MagicCrow
 				return false;
 
 			if (ValidCardColors != null) {
-				foreach (ManaTypes mc in ValidCardColors.Values) {
+				foreach (ManaTypes mc in ValidCardColors) {
 					if (!c.HasColor (mc))
 						return false;
 				}

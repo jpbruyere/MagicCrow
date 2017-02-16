@@ -26,14 +26,14 @@ namespace MagicCrow
 	[Serializable]
 	public class CardCounter : IntegerValue
 	{
-		public MultiformAttribut<Target> CardsToCount = new MultiformAttribut<Target> ();
+		public AttributGroup<Target> CardsToCount = new AttributGroup<Target> ();
 		public int Multiplier = 1;
 		#region implemented abstract members of IntegerValue
 		public override int GetValue (CardInstance _source, object _target = null)
 		{
 			int sum = 0;
 
-			foreach (CardTarget ct in CardsToCount.Values.OfType<CardTarget>()) {
+			foreach (CardTarget ct in CardsToCount.OfType<CardTarget>()) {
 				sum += ct.GetValidTargetsInPlay (_source).Count();
 			}
 			return sum * Multiplier;

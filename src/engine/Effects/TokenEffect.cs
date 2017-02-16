@@ -30,9 +30,9 @@ namespace MagicCrow
 		public IntegerValue Power;
 		public IntegerValue Toughness;
 		public string Name;
-		public MultiformAttribut<CardTypes> Types = new MultiformAttribut<CardTypes>();
+		public AttributGroup<CardTypes> Types = new AttributGroup<CardTypes>();
 		public ControlerType Owner;
-		public MultiformAttribut<ManaTypes> Colors = new MultiformAttribut<ManaTypes>();
+		public AttributGroup<ManaTypes> Colors = new AttributGroup<ManaTypes>();
 		public string Image;
 
 		public TokenEffect ()

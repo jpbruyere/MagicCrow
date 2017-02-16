@@ -16,7 +16,7 @@ namespace MagicCrow
 		}
 
 		public Trigger (MagicEventType _type, 
-			MultiformAttribut<Target> _targets = null,
+			AttributGroup<Target> _targets = null,
 			Ability _exec = null)
 		{			
 			Type = _type;
@@ -34,7 +34,7 @@ namespace MagicCrow
 
 		#endregion
 
-		public MultiformAttribut<Target> ValidTarget;
+		public AttributGroup<Target> ValidTarget;
 		//public List<Effect> Effects;
 		public GamePhases Phase;
 		//public CardInstance Source;
@@ -46,7 +46,7 @@ namespace MagicCrow
 		{	
 			if (ValidTarget == null)
 				return false;
-			foreach (Target ct in ValidTarget.Values) {
+			foreach (Target ct in ValidTarget) {
 				if (ct.Accept (target, source))
 					return true;
 			}
