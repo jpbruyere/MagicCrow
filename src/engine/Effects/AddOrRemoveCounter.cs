@@ -1,5 +1,5 @@
 ﻿//
-//  ManaEffect.cs
+//  NumericEffect.cs
 //
 //  Author:
 //       Jean-Philippe Bruyère <jp.bruyere@hotmail.com>
@@ -23,31 +23,31 @@ using System;
 namespace MagicCrow.Effects
 {
 	[Serializable]
-	public class ManaEffect : Effect
+	public class AddOrRemoveCounter : NumericEffect
 	{
-		public Cost ProducedMana;
-
-		public ManaEffect () { TypeOfEffect = EffectType.ProduceMana; }
-		public ManaEffect (Cost _producedMana)
+		public enum CounterType
 		{
-			TypeOfEffect = EffectType.ProduceMana;
-			ProducedMana = _producedMana;
+			P1P1
+		}
+		public CounterType Type;
+
+		public AddOrRemoveCounter() : base() {}
+		public AddOrRemoveCounter(EffectType et) : base(et){}
+		public AddOrRemoveCounter(EffectType et, IntegerValue amount) : base(et)
+		{
+			Amount = amount;
 		}
 
 		protected override void ApplySingle (CardInstance _source, object _target)
 		{
-			Player player = _target as Player;
 			CardInstance cardTarget = _target as CardInstance;
 			if (cardTarget == null)
 				cardTarget = _source;
-			if (player == null && _source != null)
-				player = _source.Controler;
 			
-			if (TypeOfEffect == EffectType.ProduceMana) {
-				player.ManaPool += (this as ManaEffect).ProducedMana.Clone ();
-				player.NotifyValueChange ("ManaPoolElements", player.ManaPoolElements);
+			if (Type == AddOrRemoveCounter.CounterType.P1P1) {
+				cardTarget.ChangeCounter ("Power", (this as NumericEffect).Amount);
+				cardTarget.ChangeCounter ("Toughness", (this as NumericEffect).Amount);
 			}
-
 		}
 	}
 }

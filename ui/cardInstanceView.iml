@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="UTF-8" ?>
-<Window Caption="Card instance" Height="70%" Width="260" Background="0.1,0.1,0.1,0.4">
+<Window Caption="Card instance" Height="70%" Width="260" Background="0.1,0.1,0.1,0.4" HorizontalAlignment="Left">
 	<Border BorderWidth="1" Margin="10" DataSource="{SelectedCardInstance}">
 		<VerticalStack Margin="2" >			
 			<HorizontalStack Height="Fit" Margin="5">			

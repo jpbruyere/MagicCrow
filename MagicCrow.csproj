@@ -142,7 +142,6 @@
     <Compile Include="src\divers\Coin.cs" />
     <Compile Include="src\divers\IAnimatable.cs" />
     <Compile Include="src\divers\IRenderable.cs" />
-    <Compile Include="src\RenderedCardModel.cs" />
     <Compile Include="src\divers\ExtentionMethods.cs" />
     <Compile Include="shaders\MultiShader.cs" />
     <Compile Include="src\RenderCache.cs" />
@@ -150,6 +149,9 @@
     <Compile Include="src\TextScrollerWidget.cs" />
     <Compile Include="src\MembersView.cs" />
     <Compile Include="src\engine\AttributGroup.cs" />
+    <Compile Include="src\engine\Effects\AddOrRemoveCounter.cs" />
+    <Compile Include="src\CardView.cs" />
+    <Compile Include="src\CardDataGrid.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ui\mainMenu.iml" />
@@ -392,6 +394,9 @@
     <EmbeddedResource Include="ui\MembersView.template">
       <LogicalName>MagicCrow.MembersView.template</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="shaders\hexagones.frag" />
+    <EmbeddedResource Include="shaders\square.frag" />
+    <EmbeddedResource Include="ui\cardList.iml" />
   </ItemGroup>
   <ItemGroup>
     <None Include="cardsfolder.zip">

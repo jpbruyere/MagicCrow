@@ -13,11 +13,12 @@ using OpenTK.Graphics.OpenGL;
 
 //using GLU = OpenTK.Graphics.Glu;
 using Tetra.DynamicShading;
+using MagicCrow.Effects;
 
 namespace MagicCrow
 {
     [Serializable]
-	public class CardInstance : RenderedCardModel, IDamagable
+	public class CardInstance : IDamagable
     {
 		#region CardAnimEvent
 		public class CardAnimEventArg : EventArgs
@@ -56,6 +57,251 @@ namespace MagicCrow
 		public static Vector4 AttackingColor = new Vector4(1.0f, 0.8f, 0.8f, 1f);
         #endregion
 
+		#region rendering
+		public static InstancesVBO<CardInstancedData> CardsVBO, OverlayVBO, PointOverlayVBO, InfoOverlayVBO;
+		public static byte[] PointOverlayBmp, InfoOverlayBmp;
+		public static int PointOverlayTexture, InfoOverlayTexture;
+		public const int pointOverlayWidth = 100;
+		public const int pointOverlayHeight = 40;
+		public const int infoOverlayWidth = 180;
+		public const int infoOverlayHeight = 30;
+
+		public int cardVboIdx, overlayVboIdx=-1, pointOverlayVboIdx=-1, infoOverlayVboIdx=-1;
+
+		protected float _x = 0.0f;
+		protected float _y = 0.0f;
+		protected float _z = 0.0f;
+		protected float _xAngle = 0.0f;
+		protected float _yAngle = 0.0f;
+		protected float _zAngle = 0.0f;
+		protected float _scale = 1.0f;
+
+		public MagicCard Model;
+
+		public float x
+		{
+			get { return _x; }
+			set { 
+				if (_x == value)
+					return;
+
+				_x = value;
+				updateInstacedDatas ();
+
+				float a = _x;
+				foreach (CardInstance ac in AttachedCards) {
+					if (ac.Controler != Controler) {
+						updateArrows ();		
+						continue;
+					}
+					a += 0.15f;
+					if (Math.Abs (a - ac.x) > 1.0)
+						Animation.StartAnimation (new FloatAnimation (ac, "x", a, 0.2f));
+					else
+						ac.x = a;
+				}
+			}
+		}
+		public float y
+		{
+			get { return _y; }
+			set { 
+				if (_y == value)
+					return;
+
+				_y = value;
+				updateInstacedDatas ();
+
+				float a = _y;
+				foreach (CardInstance ac in AttachedCards) {
+					if (ac.Controler != Controler) {
+						updateArrows ();		
+						continue;
+					}
+					a += 0.15f;
+					if (Math.Abs (a - ac.y) > 1.0)
+						Animation.StartAnimation (new FloatAnimation (ac, "y", a, 0.2f));
+					else
+						ac.y = a;
+				}
+			}        
+		}
+		public float z
+		{
+			get { return _z; }
+			set { 
+				if (_z == value)
+					return;
+
+				_z = value;
+				updateInstacedDatas ();
+
+				float a = _z;
+				foreach (CardInstance ac in AttachedCards) {
+					if (ac.Controler != Controler) {
+						updateArrows ();		
+						continue;
+					}
+					a -=  attachedCardsSpacing;
+					if (Math.Abs (a - ac.z) > 1.0)
+						Animation.StartAnimation (new FloatAnimation (ac, "z", a, 0.2f));
+					else
+						ac.z = a;
+				}
+			}        
+		}
+		public float xAngle
+		{
+			get { return _xAngle; }
+			set {
+				if (_xAngle == value)
+					return;
+
+				_xAngle = value; 
+				updateInstacedDatas ();
+
+				foreach (CardInstance ac in AttachedCards) {
+					if (ac.Controler != Controler)
+						continue;
+
+					if (Math.Abs (_xAngle - ac.xAngle) > 1.0)
+						Animation.StartAnimation (new FloatAnimation (ac, "z", _xAngle, 0.2f));
+					else
+						ac.xAngle = _xAngle;
+				}
+
+			}
+		}
+		public float yAngle
+		{
+			get { return _yAngle; }
+			set {
+				if (_yAngle == value)
+					return;
+
+				_yAngle = value; 
+				updateInstacedDatas ();
+			}
+		}
+		public float zAngle
+		{
+			get { return _zAngle; }
+			set {
+				if (_zAngle == value)
+					return;
+
+				_zAngle = value; 
+				updateInstacedDatas ();
+			}
+		}
+		public float Scale {
+			get { return _scale; }
+			set {
+				if (_scale == value)
+					return;
+				_scale = value;
+				updateInstacedDatas ();
+			}
+		}
+
+		public Vector3 Position
+		{
+			get
+			{ return new Vector3(x, y, z); }
+			set
+			{
+				if (value == Position)
+					return;
+				_x = value.X;
+				_y = value.Y;
+				_z = value.Z;
+				updateInstacedDatas ();
+			}
+		}
+		public void ResetPositionAndRotation()
+		{
+			x = y = z = xAngle = yAngle = zAngle = 0;
+		}			
+
+		//TODO:rationalize matrix computations
+		public Matrix4 ModelMatrix {
+			get
+			{
+				Matrix4 Rot = 
+					Matrix4.CreateRotationX (xAngle) *
+					Matrix4.CreateRotationY (yAngle) *
+					Matrix4.CreateRotationZ (zAngle);
+
+				return Matrix4.CreateScale(Scale) *  Rot * Matrix4.CreateTranslation(x, y, z);
+			}
+		}
+		Matrix4 pointOverlayMatrix {
+			get
+			{
+				return xAngle == 0f ? Matrix4.CreateRotationX (Magic.FocusAngle) *
+					Matrix4.CreateTranslation (0.25f, -0.7f, 0.04f) *
+					Matrix4.CreateScale (Scale) *
+					Matrix4.CreateRotationX (xAngle) *
+					Matrix4.CreateRotationY (yAngle) *
+					//Matrix4.CreateRotationZ (zAngle) *
+					Matrix4.CreateTranslation (x, y, z) : Matrix4.Zero;
+			}
+		}
+		Matrix4 infoOverlayMatrix {
+			get
+			{
+				return xAngle == 0f ?
+					Matrix4.CreateRotationX (Magic.FocusAngle) * Matrix4.CreateTranslation (0f, 0.65f, 0.1f) *
+					Matrix4.CreateScale (Scale) *
+					Matrix4.CreateRotationX (xAngle) *
+					Matrix4.CreateRotationY (yAngle) *
+					//Matrix4.CreateRotationZ (zAngle) *
+					Matrix4.CreateTranslation (x, y, z):Matrix4.Zero;
+			}
+		}
+		/// <summary>
+		/// Update all vbo data struc for this card instance and set dirty states
+		/// </summary>
+		public void updateInstacedDatas(){
+			if (CardsVBO == null)
+				return;
+			Matrix4 mod = ModelMatrix;
+
+			CardsVBO.InstancedDatas[cardVboIdx].modelMats = mod;
+			CardsVBO.SetInstanceIsDirty (cardVboIdx);
+			if (overlayVboIdx >= 0) {				
+				OverlayVBO.InstancedDatas [overlayVboIdx].modelMats = mod * Matrix4.CreateTranslation(0,0,0.1f);
+				OverlayVBO.SetInstanceIsDirty (overlayVboIdx);
+			}
+			if (pointOverlayVboIdx >= 0)				
+				updatePointOverlayDatas ();			
+			if (infoOverlayVboIdx >= 0)
+				updateInfoOverlayDatas ();
+		}
+		/// <summary>
+		/// Update data struc for this card instance and set VBO dirty
+		/// </summary>
+		public void updateOverlayDatas(){
+			OverlayVBO.InstancedDatas [overlayVboIdx].modelMats = ModelMatrix * Matrix4.CreateTranslation(0,0,0.1f);
+			OverlayVBO.SetInstanceIsDirty (overlayVboIdx);
+		}
+		/// <summary>
+		/// Update data struc for this data struct and set VBO dirty
+		/// </summary>
+		public void updatePointOverlayDatas(){
+			PointOverlayVBO.InstancedDatas [pointOverlayVboIdx].modelMats = pointOverlayMatrix;
+			PointOverlayVBO.InstancedDatas [pointOverlayVboIdx].ImgIdx = pointOverlayVboIdx;
+			PointOverlayVBO.SetInstanceIsDirty (pointOverlayVboIdx);
+		}
+		/// <summary>
+		/// Update data struc for this data struct and set VBO dirty
+		/// </summary>
+		public void updateInfoOverlayDatas(){
+			InfoOverlayVBO.InstancedDatas [infoOverlayVboIdx].modelMats = infoOverlayMatrix;
+			InfoOverlayVBO.InstancedDatas [infoOverlayVboIdx].ImgIdx = infoOverlayVboIdx;
+			InfoOverlayVBO.SetInstanceIsDirty (infoOverlayVboIdx);
+		}
+		#endregion
 		const float attachedCardsSpacing = 0.03f;
 
 		int _power = int.MinValue;
@@ -109,7 +355,7 @@ namespace MagicCrow
 					overlayVboIdx = OverlayVBO.AddInstance ();				
 				else {
 					OverlayVBO.RemoveInstance (overlayVboIdx);
-					foreach (CardInstance ci in Magic.CurrentGameWin.cards.Where(c=>c.overlayVboIdx>0)) {
+					foreach (CardInstance ci in CardInstance.cards.Where(c=>c.overlayVboIdx>0)) {
 						if (ci == this)
 							continue;
 						if (ci.overlayVboIdx > overlayVboIdx) {
@@ -125,7 +371,17 @@ namespace MagicCrow
 			}
 		}
 
-
+		public Dictionary<string,int> Counters = new Dictionary<string, int> ();
+		public void ChangeCounter(string counterName, int amount = 1){
+			if (Counters.ContainsKey (counterName))
+				Counters [counterName]+= amount;
+			else
+				Counters [counterName] = amount;
+		}
+		public int GetCounter(string counterName){
+			return Counters.ContainsKey (counterName) ?
+				Counters [counterName] : 0;
+		}
 		public IList<EffectGroup> PumpEffect = new List<EffectGroup> ();
 		public IList<EffectGroup> Effects{
 			get { return Model.SpellEffects.Concat(PumpEffect).ToList(); }
@@ -194,64 +450,64 @@ namespace MagicCrow
 				new ChangeZoneEventArg (this, _oldZone, _newZone));
 
 			if (_oldZone == _newZone)
+				return;				
+		}
+		public void CreatePointOverlay(){
+			pointOverlayVboIdx = PointOverlayVBO.AddInstance ();
+			PointOverlayVBO.UpdateVBO ();
+			byte[] newPObmp = new byte[pointOverlayWidth * pointOverlayHeight * 4 *
+				PointOverlayVBO.InstancedDatas.Length];
+			if (PointOverlayBmp != null)
+				Array.Copy (PointOverlayBmp, newPObmp, PointOverlayBmp.Length);
+
+			PointOverlayBmp = newPObmp;
+
+			if (!GL.IsTexture (PointOverlayTexture)) {
+				PointOverlayTexture = GL.GenTexture ();
+				GL.BindTexture (TextureTarget.Texture2DArray, PointOverlayTexture);
+				GL.TexParameter (TextureTarget.Texture2DArray, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
+				GL.TexParameter (TextureTarget.Texture2DArray, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+				GL.TexParameter (TextureTarget.Texture2DArray, TextureParameterName.TextureWrapR, (int)TextureWrapMode.ClampToEdge);
+			} else
+				GL.BindTexture (TextureTarget.Texture2DArray, PointOverlayTexture);
+
+			GL.TexImage3D (TextureTarget.Texture2DArray, 0, PixelInternalFormat.Rgba,
+				pointOverlayWidth, pointOverlayHeight, PointOverlayVBO.InstancedDatas.Length, 0,
+				OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, PointOverlayBmp);
+			GL.BindTexture (TextureTarget.Texture2DArray, 0);
+
+			UpdatePointsOverlaySurface ();
+		}
+		public void RemovePointOverlay(){
+			if (pointOverlayVboIdx < 0)
 				return;
-				
-			if (HasType (CardTypes.Creature)) {
-				if (_newZone == CardGroupEnum.InPlay) {
-					pointOverlayVboIdx = PointOverlayVBO.AddInstance ();
-					PointOverlayVBO.UpdateVBO ();
-					byte[] newPObmp = new byte[pointOverlayWidth * pointOverlayHeight * 4 * 
-						PointOverlayVBO.InstancedDatas.Length];
-					if (PointOverlayBmp != null)
-						Array.Copy (PointOverlayBmp, newPObmp, PointOverlayBmp.Length);
-
-					PointOverlayBmp = newPObmp;
-
-					if (!GL.IsTexture (PointOverlayTexture)) {
-						PointOverlayTexture = GL.GenTexture ();
-						GL.BindTexture(TextureTarget.Texture2DArray, PointOverlayTexture);
-						GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
-						GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
-						GL.TexParameter(TextureTarget.Texture2DArray, TextureParameterName.TextureWrapR, (int)TextureWrapMode.ClampToEdge);
-					}else
-						GL.BindTexture(TextureTarget.Texture2DArray, PointOverlayTexture);
-					
-					GL.TexImage3D (TextureTarget.Texture2DArray, 0, PixelInternalFormat.Rgba,
-						pointOverlayWidth, pointOverlayHeight, PointOverlayVBO.InstancedDatas.Length, 0,
-						OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, PointOverlayBmp);
-					GL.BindTexture(TextureTarget.Texture2DArray, 0);
-
-					UpdatePointsOverlaySurface ();
-				}else if (_oldZone == CardGroupEnum.InPlay) {
-					PointOverlayVBO.RemoveInstance (pointOverlayVboIdx);
-					if (PointOverlayVBO.InstancedDatas.Length > 0) {
-						foreach (CardInstance ci in Magic.CurrentGameWin.Players.SelectMany(p => p.InPlay.Cards.Where(c => c.pointOverlayVboIdx>0))) {
-							if (ci == this)
-								continue;
-							if (ci.pointOverlayVboIdx > pointOverlayVboIdx) {
-								ci.pointOverlayVboIdx--;
-								ci.updatePointOverlayDatas ();
-							}
-						}
-						int oSize = pointOverlayWidth * pointOverlayHeight * 4;
-						byte[] newPObmp = new byte[oSize * PointOverlayVBO.InstancedDatas.Length];
-						Array.Copy (PointOverlayBmp, 0, newPObmp, 0, oSize * pointOverlayVboIdx);
-						Array.Copy (PointOverlayBmp, oSize * (pointOverlayVboIdx + 1), newPObmp, oSize * pointOverlayVboIdx,
-							oSize * (PointOverlayVBO.InstancedDatas.Length - pointOverlayVboIdx - 1));
-						
-						PointOverlayBmp = newPObmp;
-						GL.BindTexture(TextureTarget.Texture2DArray, PointOverlayTexture);
-						GL.TexImage3D (TextureTarget.Texture2DArray, 0, PixelInternalFormat.Rgba,
-							pointOverlayWidth, pointOverlayHeight, PointOverlayVBO.InstancedDatas.Length, 0,
-							OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, PointOverlayBmp);
-						GL.BindTexture(TextureTarget.Texture2DArray, 0);
+			PointOverlayVBO.RemoveInstance (pointOverlayVboIdx);
+			if (PointOverlayVBO.InstancedDatas.Length > 0) {
+				foreach (CardInstance ci in Magic.CurrentGameWin.Players.SelectMany(p => p.InPlay.Cards.Where(c => c.pointOverlayVboIdx>0))) {
+					if (ci == this)
+						continue;
+					if (ci.pointOverlayVboIdx > pointOverlayVboIdx) {
+						ci.pointOverlayVboIdx--;
+						ci.updatePointOverlayDatas ();
 					}
-					pointOverlayVboIdx = -1;
-					PointOverlayVBO.UpdateVBO ();
-					UpdatePointsOverlaySurface ();
 				}
+				int oSize = pointOverlayWidth * pointOverlayHeight * 4;
+				byte[] newPObmp = new byte[oSize * PointOverlayVBO.InstancedDatas.Length];
+				Array.Copy (PointOverlayBmp, 0, newPObmp, 0, oSize * pointOverlayVboIdx);
+				if (pointOverlayVboIdx < PointOverlayVBO.InstancedDatas.Length)
+					Array.Copy (PointOverlayBmp, oSize * (pointOverlayVboIdx + 1), newPObmp, oSize * pointOverlayVboIdx,
+						oSize * (PointOverlayVBO.InstancedDatas.Length - pointOverlayVboIdx - 1));
 
+				PointOverlayBmp = newPObmp;
+				GL.BindTexture(TextureTarget.Texture2DArray, PointOverlayTexture);
+				GL.TexImage3D (TextureTarget.Texture2DArray, 0, PixelInternalFormat.Rgba,
+					pointOverlayWidth, pointOverlayHeight, PointOverlayVBO.InstancedDatas.Length, 0,
+					OpenTK.Graphics.OpenGL.PixelFormat.Bgra, PixelType.UnsignedByte, PointOverlayBmp);
+				GL.BindTexture(TextureTarget.Texture2DArray, 0);
 			}
+			pointOverlayVboIdx = -1;
+			PointOverlayVBO.UpdateVBO ();
+			UpdatePointsOverlaySurface ();			
 		}
         public void PutIntoGraveyard()
         {
@@ -259,7 +515,22 @@ namespace MagicCrow
 				this.DetacheCard (AttachedCards.First());			
 
             Reset();
-			ChangeZone (CardGroupEnum.Graveyard);			
+			if (IsToken) {
+				CurrentGroup.RemoveCard (this);
+				foreach (CardInstance ci in cards) {
+					if (ci == this)
+						continue;
+					if (ci.cardVboIdx > cardVboIdx) {
+						ci.cardVboIdx--;
+					}
+				}
+				List<CardInstance> tmpCardList = cards.ToList ();
+				tmpCardList.Remove (this);
+				cards = tmpCardList.ToArray ();
+				CardsVBO.RemoveInstance(cardVboIdx);
+				CardsVBO.UpdateVBO ();
+			}else
+				ChangeZone (CardGroupEnum.Graveyard);
         }
 
 		public void Reset(bool _positionReset = false)
@@ -268,6 +539,8 @@ namespace MagicCrow
             	ResetPositionAndRotation();
             ResetOverlay();
 
+			PumpEffect.Clear ();
+			Counters.Clear ();
 			Damages.Clear();
             Combating = false;
 			Kicked = false;
@@ -321,13 +594,15 @@ namespace MagicCrow
 			        
         public bool HasEffect(EffectType et)
         {
-			foreach (CardInstance ca in AttachedCards) {
-				foreach (EffectGroup eg in ca.Effects) {
-					foreach (Effect e in eg) {
-						if (e.TypeOfEffect == et)
-							return true;
-					}
+			foreach (EffectGroup eg in Effects) {
+				foreach (Effect e in eg) {
+					if (e.TypeOfEffect == et)
+						return true;
 				}
+			}
+			foreach (CardInstance ca in AttachedCards) {
+				if (ca.HasEffect (et))
+					return true;
 			}
             return false;
         }
@@ -437,7 +712,7 @@ namespace MagicCrow
 			foreach (CardInstance ci in MagicEngine.CurrentEngine.CardsInPlayHavingEffects) {
 				bool valid = false;
 				foreach (EffectGroup eg in ci.Effects) {						
-					foreach (CardTarget ct in eg.Affected.OfType<CardTarget>()) {
+					foreach (CardTarget ct in eg.Affected?.OfType<CardTarget>()) {
 						if (!ct.Accept (this, ci)) {
 							valid = false;
 							break;
@@ -471,17 +746,24 @@ namespace MagicCrow
 						}
 					}						
 				}
-			}
+			}				
+
 			int damages = 0;
 			foreach (Damage d in Damages)
 				damages += d.Amount;
 
+			if (_toughness == int.MinValue)
+				_toughness = Model.Toughness;
+			_toughness += GetCounter ("Toughness");
+			if (_power == int.MinValue)
+				_power = Model.Power;
+			_power += GetCounter ("Power");
+
 			if (damages == 0)
 				return;
 
-			if (_toughness == int.MinValue)
-				_toughness = Model.Toughness;
 			_toughness -= damages;
+
 		}
 		public bool UpdateControler()
 		{
@@ -759,6 +1041,7 @@ namespace MagicCrow
 		/// return true if abs has changes
 		/// </summary>
 		public void CheckAbilityChanges(){
+			Magic.AddLog ("DEBUG => ********* Check Ability Changes for : " + this.Name);
 			IEnumerable<AbilityEnum> abs = getAllAbilities ().Select (a => a.AbilityType).Distinct ();
 			int abCount = abs.Count ();
 
@@ -801,6 +1084,7 @@ namespace MagicCrow
 		/// Creates vbo instance and overlay bitmap.
 		/// </summary>
 		void createInfoOverlay(){
+			Magic.AddLog ("DEBUG => CREATE Info Overlay : " + this.Name);
 			AbilityChangesDetected = true;
 			infoOverlayVboIdx = InfoOverlayVBO.AddInstance ();
 			InfoOverlayVBO.UpdateVBO ();
@@ -828,6 +1112,8 @@ namespace MagicCrow
 			UpdateInfoOverlaySurface ();
 		}
 		void removeInfoOverlay(){
+			Magic.AddLog ("DEBUG => REMOVE Info Overlay : " + this.Name);
+
 			AbilityChangesDetected = false;
 			InfoOverlayVBO.RemoveInstance (infoOverlayVboIdx);
 			if (InfoOverlayVBO.InstancedDatas.Length > 0) {
@@ -842,8 +1128,9 @@ namespace MagicCrow
 				int oSize = infoOverlayWidth * infoOverlayHeight * 4;
 				byte[] newPObmp = new byte[oSize * InfoOverlayVBO.InstancedDatas.Length];
 				Array.Copy (InfoOverlayBmp, 0, newPObmp, 0, oSize * infoOverlayVboIdx);
-				Array.Copy (InfoOverlayBmp, oSize * (infoOverlayVboIdx + 1), newPObmp, oSize * infoOverlayVboIdx,
-					oSize * (InfoOverlayVBO.InstancedDatas.Length - infoOverlayVboIdx - 1));
+				if (infoOverlayVboIdx < InfoOverlayVBO.InstancedDatas.Length)
+					Array.Copy (InfoOverlayBmp, oSize * (infoOverlayVboIdx + 1), newPObmp, oSize * infoOverlayVboIdx,
+						oSize * (InfoOverlayVBO.InstancedDatas.Length - infoOverlayVboIdx - 1));
 
 				InfoOverlayBmp = newPObmp;
 				GL.BindTexture(TextureTarget.Texture2DArray, InfoOverlayTexture);
@@ -880,12 +1167,14 @@ namespace MagicCrow
 				{
 					Cairo.Rectangle r = new Cairo.Rectangle(x, y, infoOverlayWidth, infoOverlayHeight);
 
-					//gr.SetSourceRGBA (1,1,1,1);
-					//gr.Rectangle(r);
-					//gr.FillPreserve();
-					//gr.SetSourceRGB (0.9f,0.2f,0.2f);
-					//gr.LineWidth = 2.0f;
-					//gr.Stroke();
+					gr.SetSourceRGBA (1,1,1,1);
+					gr.Rectangle(r);
+					gr.Operator = Operator.Clear;
+					gr.FillPreserve ();
+					gr.Operator = Operator.Over;
+					gr.SetSourceRGB (0.9f,0.2f,0.2f);
+					gr.LineWidth = 4.0f;
+					gr.Stroke();
 
 					gr.Translate (0, y);
 					gr.Scale (0.34, 0.32);
@@ -991,5 +1280,84 @@ namespace MagicCrow
         {
             return string.Format("{0} | {1} | {2}", Model.Name, Model.Types, Model.Cost);
         }
+
+		Random rnd = new Random();
+		public static List<string> magicCardImgs = new List<string>();
+		public static CardInstance[] cards;//cards in play array
+		public static Tetra.Texture cardTextures;
+
+		public void CreateGLCard(){
+			List<CardInstance> tmpCardList = cards.ToList ();
+			tmpCardList.Add (this);
+			cards = tmpCardList.ToArray ();
+			cardVboIdx = cards.Length - 1;
+
+			string imgPath = GetImgPath();
+			int imgIdx = magicCardImgs.IndexOf (imgPath);
+			if (imgIdx < 0) {
+				imgIdx = magicCardImgs.Count;
+				magicCardImgs.Add (imgPath);
+				cardTextures.Add3DTextureLayer (imgPath);
+			}
+
+			CardsVBO.AddInstance ();
+			CardsVBO.InstancedDatas [cardVboIdx].ImgIdx = imgIdx;
+			CardsVBO.UpdateVBO ();
+		}
+
+		public static void Create3DCardsTextureAndVBO(){
+			cards = Magic.CurrentGameWin.Players.SelectMany(p=>p.Deck.Cards).ToArray();
+
+			CardInstancedData[] cid = new CardInstancedData[cards.Length];
+
+			magicCardImgs.Add ("#MagicCrow.images.card_back.jpg");
+
+			for (int i = 0; i < cards.Length; i++) {
+				CardInstance ci = cards [i];
+				ci.cardVboIdx = i;
+				string imgPath = ci.GetImgPath();
+				int imgIdx = magicCardImgs.IndexOf (imgPath);
+				if (imgIdx < 0) {
+					imgIdx = magicCardImgs.Count;
+					magicCardImgs.Add (imgPath);
+				}
+				cid [i].ImgIdx = imgIdx;
+			}
+
+			CardsVBO?.Dispose ();
+			CardsVBO = new InstancesVBO<CardInstancedData> (cid);
+			CardsVBO.UpdateVBO ();
+
+			Tetra.Texture.DefaultMagFilter = TextureMagFilter.Linear;
+			Tetra.Texture.GenerateMipMaps = false;
+
+			cardTextures = Tetra.Texture.Load (TextureTarget.Texture2DArray, magicCardImgs.ToArray());
+
+			Tetra.Texture.ResetToDefaultLoadingParams ();			
+		}
+		public static void Dispose3DCardTexture(){
+			if (GL.IsTexture (cardTextures))
+				GL.DeleteTexture (cardTextures);
+			cardTextures = null;
+			cards = null;
+			magicCardImgs.Clear ();
+		}
+
+		string GetImgPath(){
+			if (!string.IsNullOrEmpty (this.Model.picturePath)) {
+				if (System.IO.File.Exists (Model.picturePath))
+					return Model.picturePath;
+			}
+			string imgPath = Magic.cardImgsBasePath;
+			string editionPicsPath = System.IO.Path.Combine (Magic.cardImgsBasePath, Edition);
+			if (System.IO.Directory.Exists (editionPicsPath))
+				imgPath = editionPicsPath;
+
+			if (Model.nbrImg == 1)
+				imgPath = System.IO.Path.Combine (imgPath, Name + ".full.jpg");
+			else
+				imgPath = System.IO.Path.Combine (imgPath, Name + rnd.Next (1, Model.nbrImg) + ".full.jpg");
+			return imgPath;
+		}
     }
 }

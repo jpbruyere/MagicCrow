@@ -12,6 +12,7 @@ using ICSharpCode.SharpZipLib.Zip;
 using System.Text.RegularExpressions;
 using OpenTK.Graphics.OpenGL;
 using System.Runtime.Serialization.Formatters.Binary;
+using MagicCrow.Effects;
 
 namespace MagicCrow
 {
@@ -28,13 +29,8 @@ namespace MagicCrow
 
 		public static int CardBack = 0;
 
-		public static ImageSurface imgManaW;
-		public static ImageSurface imgManaG;
-		public static ImageSurface imgManaR;
-		public static ImageSurface imgManaB;
-		public static ImageSurface imgManaU;
-
 		public static Rsvg.Handle hSVGsymbols;
+		public static Rsvg.Handle hSVGManas;
 
 		public static AttributGroup<ManaTypes> ParseMultipleColors(string strColors)
 		{
@@ -47,6 +43,7 @@ namespace MagicCrow
 		}
 		public static void Init(){
 			hSVGsymbols = loadRessourceSvg ("MagicCrow.images.abilities.svg");
+			hSVGManas = loadRessourceSvg ("MagicCrow.images.Mana2.svg");
 		}
 //		public static void InitCardModel()
 //		{			
@@ -143,7 +140,12 @@ namespace MagicCrow
 				formatter.Serialize (ms, c);
 			}
 		}
-		public static bool TryGetCardFromCache(string name, ref MagicCard c){
+		public static bool TryLoadCard(string name, ref MagicCard c){			
+			return
+				tryGetCardFromCache (name, ref c) ? true :
+				TryGetCardFromZip (name, ref c);
+		}
+		static bool tryGetCardFromCache(string name, ref MagicCard c){
 			string cardPath = System.IO.Path.Combine (cachingPath, name + ".bin");
 			if (!File.Exists (cardPath))
 				return false;
@@ -159,9 +161,6 @@ namespace MagicCrow
 			if (cardStream == null)
 				return false;
 			
-
-
-			#if DEBUG
 			try {
 				MemoryStream ms = new MemoryStream();
 				cardStream.CopyTo (ms);
@@ -173,20 +172,9 @@ namespace MagicCrow
 				}
 			} catch (Exception ex) {
 				Debug.WriteLine(ex.ToString());
+				return false;
 			}
-			#else
-			LoadCardData(cardStream);
-			c = CardsDatabase [name];
-			#endif
-
-
 			return true;
-		}
-		public static void LoadCardData(string path){
-			using (Stream s = new FileStream (path, FileMode.Open)) {
-				MagicCard c = LoadCardData (s);
-				c.FilePath = path;
-			}
 		}
 		public static MagicCard LoadCardData(Stream s)
 		{
@@ -394,21 +382,46 @@ namespace MagicCrow
 				}
 			}
 		}
+		public static string[] GetCardNames(){
+			List<string> tmp = new List<string> ();
+			using (Stream fs = new FileStream(MAGICZIP, FileMode.Open, FileAccess.Read))
+			{
+				ZipFile zf = new ZipFile (fs);
+				foreach (ZipEntry ze in zf)
+				{					
+					if (ze.IsDirectory)
+						continue;
+					using (Stream s = zf.GetInputStream (ze)) {
+						using (StreamReader sr = new StreamReader(s))
+						{
+							string[] ls = new string[3];
+							while (!sr.EndOfStream)
+							{
+								string line = sr.ReadLine();
+								if (line.StartsWith ("name", StringComparison.OrdinalIgnoreCase))
+									ls[0] = line.Substring (5);
+								else if (line.StartsWith ("manacost", StringComparison.OrdinalIgnoreCase))
+									ls[1] = line.Substring (9);
+								else if (line.StartsWith ("types", StringComparison.OrdinalIgnoreCase)) {
+									ls[2] = line.Substring (6);
+									tmp.Add (string.Join(";", ls));
+									break;
+								}
+							}
+						}
+					}
+				}
+				zf.Close ();
+			}	
+			return tmp.ToArray ();
+		}
 		public static string[] GetCardDataFileNames(){
 			List<string> tmp = new List<string> ();
 			using (Stream fs = new FileStream(MAGICZIP, FileMode.Open, FileAccess.Read))
 			{
 				ZipFile zf = new ZipFile (fs);
-				int i = 0;
-				const int progressStep = 50;
 				foreach (ZipEntry ze in zf)
 				{					
-					if (i == progressStep) {						
-						i = 0;
-						Thread.Sleep (1);
-					}
-					i++;
-
 					if (ze.IsDirectory)
 						continue;
 					

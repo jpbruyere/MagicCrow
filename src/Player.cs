@@ -9,6 +9,7 @@ using Crow;
 using System.Diagnostics;
 using System.Threading;
 using OpenTK.Input;
+using MagicCrow.Effects;
 
 namespace MagicCrow
 {
@@ -383,12 +384,13 @@ namespace MagicCrow
                 Library.AddCard(c, anim);
             }
         }
-		public void AddCardForeignToHand(MagicCard mc){
+		public CardInstance AddCardForeignToHand(MagicCard mc){
 			CardInstance ci = Deck.AddCard (mc);
 			ci.Controler = this;
 			ci.ResetPositionAndRotation();
 			ci.yAngle = MathHelper.Pi;
-			Hand.AddCard(ci,true);			
+			Hand.AddCard(ci,true);
+			return ci;
 		}
 
 		public void initialDraw ()

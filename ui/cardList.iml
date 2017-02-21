@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<Window Caption="Cards" Height="80%" Width="80%">
+	<VerticalStack>
+		<HorizontalStack>
+			<VerticalStack Width="50%">
+				<TextBox Text="{../cardEntries.SelectedItem}"/>
+				<CardDataGrid Focusable="true" Name="cardEntries" Datas="{CardList}"/>
+			</VerticalStack>
+			<Splitter/>
+			<VerticalStack>
+				<CardView CardName="{../../cardEntries.SelectedItem}"/>
+				<HorizontalStack Fit="true" Margin="10">
+					<Button Caption="Save in cache" MouseClick="onSaveInCache"/>
+					<Button Caption="Add To Hand" MouseClick="onAddCardToHand"/>
+				</HorizontalStack>
+			</VerticalStack>
+		</HorizontalStack>
+	</VerticalStack>	
+</Window>
+

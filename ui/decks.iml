@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="UTF-8" ?>
-<Window Caption="Preconstructed Decks" Height="50%" Width="200">
+<Window Caption="Preconstructed Decks" Height="80%" Width="200" HorizontalAlignment="Left">
 	<ListBox Data="{DeckList}" Name="deckList" 
 		SelectedItemChanged="onPreconDeckListValueChange"								
 		ItemTemplate="#MagicCrow.ui.DeckItem.Template">

@@ -129,13 +129,12 @@ namespace MagicCrow
 		}
 
 		public void CacheAllCards(){
-			foreach (MainLine l in CardEntries) {
-				MagicCard c = null;
-				if (!MagicData.TryGetCardFromZip (l.name, ref c)) {
+			foreach (MainLine l in CardEntries) {				
+				MagicCard c = l.Card;
+				if (c == null)
 					Debug.WriteLine ("DCK: {0} => Card not found: {1}", Name, l.name);
-					continue;
-				}
-				MagicData.CacheCard (c);
+				else
+					MagicData.CacheCard (c);
 			}
 		}
 
@@ -164,11 +163,9 @@ namespace MagicCrow
 		public void LoadCards(){
 			foreach (MainLine l in inputDck.CardEntries) {
 				MagicCard c = null;
-				if (!MagicData.TryGetCardFromCache (l.name, ref c)) {
-					if (!MagicData.TryGetCardFromZip (l.name, ref c)) {
-						Debug.WriteLine ("DCK: {0} => Card not found: {1}", inputDck.Name, l.name);
-						return;
-					}
+				if (!MagicData.TryLoadCard (l.name, ref c)) {
+					Debug.WriteLine ("DCK: {0} => Card not found: {1}", inputDck.Name, l.name);
+					continue;
 				}
 				for (int i = 0; i < l.count; i++) {
 					AddCard (c, l.code);
@@ -210,8 +207,7 @@ namespace MagicCrow
 		public MagicCard Card {
 			get { 
 				MagicCard c = null;
-				MagicData.TryGetCardFromZip (name, ref c);
-				return c;
+				return MagicData.TryLoadCard (name, ref c) ? c : null;
 			}
 		}
 	}

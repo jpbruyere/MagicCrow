@@ -47,7 +47,19 @@ namespace MagicCrow
 			CombatingCreature.MaxHorizontalSpace = 7f;
 		}
 
+		public override void AddCard (CardInstance c, bool anim = true)
+		{
+			base.AddCard (c, anim);
 
+			if (c.HasType (CardTypes.Creature))
+				c.CreatePointOverlay ();			
+		}
+		public override void RemoveCard (CardInstance c, bool anim = true)
+		{
+			base.RemoveCard (c, anim);
+			if (c.HasType (CardTypes.Creature))
+				c.RemovePointOverlay ();
+		}
 		public override void UpdateLayout(bool anim = true)
 		{
 			IList<CardInstance> uncontroledCards = Cards.Where (c => c.Controler != this.Controler).ToList();

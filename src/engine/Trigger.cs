@@ -41,6 +41,7 @@ namespace MagicCrow
 		public Ability Exec;
 		public string Description;
 		public bool InhibStacking; //prevent triggered ability to goes on the stack (ex card enter tapped)
+		public CardGroupEnum TriggerZone;
 
 		bool targetIsValid(object target, CardInstance source)
 		{	
@@ -57,6 +58,11 @@ namespace MagicCrow
 		{
 			if (Type != arg.Type)
 				return false;
+
+			if (TriggerZone != CardGroupEnum.Any) {
+				if (triggerSource.CurrentGroup.GroupName != TriggerZone)
+					return false;
+			}
 													
 			switch (Type) {
 			case MagicEventType.ChangeZone:
@@ -154,6 +160,7 @@ namespace MagicCrow
 					}
 					break;
 				case "TriggerZones":
+					t.TriggerZone = CardGroup.ParseZoneName (data);
 					break;
 				case "CheckSVar":
 					break;

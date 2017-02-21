@@ -2,6 +2,7 @@
 *~
 
 #build
+tmp/
 build/
 [Oo]bj/
 [Bb]in/

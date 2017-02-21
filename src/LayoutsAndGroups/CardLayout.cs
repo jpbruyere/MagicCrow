@@ -54,7 +54,7 @@ namespace MagicCrow
 			float cZ = this.z;
 
 			if (anim) {
-				foreach (CardInstance c in Cards) {
+				foreach (CardInstance c in Cards.Where(c=>c.AttachedTo?.Controler != c.Controler)) {
 					float aX = cX;
 					float aY = cY;
 					float aZ = cZ + c.AttachedCards.Count * attachedCardsSpacing;

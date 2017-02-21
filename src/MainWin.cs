@@ -39,7 +39,7 @@ namespace MagicCrow
 	public struct CardInstancedData
 	{
 		public Matrix4 modelMats;
-		public int picked;//0,1
+		public int ImgIdx;//0,1
 	}
 	class Magic : CrowWindow
 	{
@@ -153,52 +153,11 @@ namespace MagicCrow
 			//wirlpoolShader = new GameLib.EffectShader ("GGL.Shaders.GameLib.fire",64,64);
 			wirlpoolShader = new GameLib.EffectShader ("GGL.Shaders.GameLib.lightBalls",64,64);
 		}
-		public void CreateGLCards(){
-			Random rnd = new Random();
-			cards = Players[0].Deck.Cards.Concat(Players[1].Deck.Cards).ToArray();
-			List<string> magicCardImgs = new List<string>();
-			CardInstancedData[] cid = new CardInstancedData[cards.Length];
-
-			magicCardImgs.Add ("#MagicCrow.images.card_back.jpg");
-
-			for (int i = 0; i < cards.Length; i++) {
-				CardInstance ci = cards [i];
-				string imgPath = cardImgsBasePath;
-				string editionPicsPath = System.IO.Path.Combine (cardImgsBasePath, ci.Edition);
-				if (Directory.Exists (editionPicsPath))
-					imgPath = editionPicsPath;
-
-				if (ci.Model.nbrImg == 1)
-					imgPath = System.IO.Path.Combine (imgPath, ci.Name + ".full.jpg");
-				else
-					imgPath = System.IO.Path.Combine (imgPath, ci.Name + rnd.Next(1,ci.Model.nbrImg) + ".full.jpg");
-				int imgIdx = magicCardImgs.IndexOf (imgPath);
-				if (imgIdx < 0) {
-					imgIdx = magicCardImgs.Count;
-					magicCardImgs.Add (imgPath);
-				}
-				//cid [i].modelMats = Matrix4.Identity; //Matrix4.CreateTranslation (new Vector3(0.4f*i,0,0.02f*i));
-				cid [i].picked = imgIdx;
-				ci.cardVboIdx = i;
-			}
-			//Tetra.Texture.DefaultMinFilter = TextureMinFilter.LinearMipmapLinear;
-			Tetra.Texture.DefaultMagFilter = TextureMagFilter.Linear;
-			Tetra.Texture.GenerateMipMaps = false;
-
-			cardTextures = Tetra.Texture.Load (TextureTarget.Texture2DArray, magicCardImgs.ToArray());
-			Tetra.Texture.ResetToDefaultLoadingParams ();
-
-			CardInstance.CardsVBO = new InstancesVBO<CardInstancedData> (cid);
-			CardInstance.CardsVBO.UpdateVBO ();
-
-			Players[0].CurrentState = MagicCrow.Player.PlayerStates.InitialDraw;
-			Players[1].CurrentState = MagicCrow.Player.PlayerStates.InitialDraw;
-		}
 
 		void draw(){
 			mainShader.Enable ();
 			GL.ActiveTexture (TextureUnit.Texture0);
-			GL.BindTexture(TextureTarget.Texture2DArray, cardTextures);
+			GL.BindTexture(TextureTarget.Texture2DArray, CardInstance.cardTextures);
 
 			mainShader.SetMVP(modelview * projection);
 
@@ -456,12 +415,19 @@ namespace MagicCrow
 		}
 		void onCardListValueChange (object sender, SelectionChangeEventArgs e)
 		{
-			if (e.NewValue != null)
-				Load ("#MagicCrow.ui.cardModel.iml").DataSource = (e.NewValue as MainLine).Card;
+			if (e.NewValue == null)
+				return;
+			MainLine ml = e.NewValue as MainLine;
+			Crow.Configuration.Set ("LastPointedCardForDebug", ml.name);
+			Load ("#MagicCrow.ui.cardModel.iml").DataSource = ml.Card;
 		}
 		void onStartNewGame (object sender, MouseButtonEventArgs e)
 		{			
 			startNewGame ();
+		}
+		void onButExit_MouseClick (object sender, MouseButtonEventArgs e)
+		{			
+			Close ();
 		}
 		void onShowDecks (object sender, MouseButtonEventArgs e)
 		{
@@ -470,6 +436,22 @@ namespace MagicCrow
 		}
 		void onSaveInCache (object sender, MouseButtonEventArgs e){			
 			currentDeck.CacheAllCards ();
+		}
+		void onAddCardToHand (object sender, MouseButtonEventArgs e)
+		{
+			string cardInfos = (((sender as GraphicObject).Parent.Parent.Parent as GraphicObject).
+				FindByName ("cardEntries") as CardDataGrid).SelectedItem as string;
+			MagicCard mc = null;
+			MagicData.TryLoadCard (cardInfos, ref mc);
+
+			CardInstance tmp = Players[0].Deck.AddCard(mc);
+
+			tmp.CreateGLCard ();
+
+			tmp.Controler = Players[0];
+			tmp.ResetPositionAndRotation();
+			tmp.yAngle = MathHelper.Pi;
+			tmp.Controler.Hand.AddCard(tmp,true);
 		}
 		void onCancelLastClick (object sender, MouseButtonEventArgs e){
 			engine.MagicStack.PopMSE ();
@@ -491,18 +473,17 @@ namespace MagicCrow
 		#region Game Logic
 		public static string dataPath = "/mnt/data2/downloads/forge-gui-desktop-1.5.31/res/";
 		public static string deckPath = dataPath + "quest/precons/";
-		static string cardImgsBasePath = System.IO.Path.Combine (MagicData.cardsArtPath, "cards");
+		public static string cardImgsBasePath = System.IO.Path.Combine (MagicData.cardsArtPath, "cards");
 
 		MagicEngine engine;
 		DeckFile[] deckList;
-		public CardInstance[] cards;//cards in play array
-		int cardTextures;
 		int selCardInst = -1;//index of selected card in cardsVBO, given by selection texture
 
 		public Player[] Players;
 
 		DeckFile currentDeck;
 		string[] cardList;
+		object cardListMutex = new object();
 		public DeckFile[] DeckList {
 			get { return deckList; }
 			set {
@@ -513,12 +494,14 @@ namespace MagicCrow
 			}
 		}
 		public string[] CardList {
-			get { return cardList; }
+			get { lock (cardListMutex) return cardList; }
 			set {
-				if (cardList == value)
-					return;
-				cardList = value;
-				NotifyValueChanged ("CardList", cardList);
+				lock (cardListMutex) {
+					if (cardList == value)
+						return;
+					cardList = value;
+					NotifyValueChanged ("CardList", cardList);
+				}
 			}			
 		}
 
@@ -539,8 +522,8 @@ namespace MagicCrow
 				if (selCardInst == value)
 					return;
 				selCardInst = value;
-				if (selCardInst>=0 && selCardInst < cards?.Length)
-					CardInstance.selectedCard = cards [selCardInst];
+				if (selCardInst>=0 && selCardInst < CardInstance.cards?.Length)
+					CardInstance.selectedCard = CardInstance.cards [selCardInst];
 				else
 					CardInstance.selectedCard = null;
 			}
@@ -585,13 +568,17 @@ namespace MagicCrow
 			DeckList = tmpList.ToArray ();
 		}
 		void loadCardList()
-		{
-			CardList = MagicData.GetCardDataFileNames ();
+		{			
+			CardList = MagicData.GetCardNames ();
+			Debug.WriteLine ("Card names list loaded");
 		}
 		#endregion
 
 		void initGame () {
 			loadPreconstructedDecks ();
+			Thread t = new Thread (loadCardList);
+			t.IsBackground = true;
+			t.Start ();
 
 			MagicData.Init ();
 
@@ -678,11 +665,7 @@ namespace MagicCrow
 			DeleteWidget (mstack);
 
 			CardInstance.CardsVBO?.Dispose();
-
-			cards = null;
-			if (GL.IsTexture (cardTextures))
-				GL.DeleteTexture (cardTextures);
-			cardTextures = 0;
+			CardInstance.Dispose3DCardTexture ();
 
 			loadWindow ("#MagicCrow.ui.mainMenu.iml");
 		}
@@ -690,9 +673,6 @@ namespace MagicCrow
 		void MagicEngine_MagicEvent (MagicEventArg arg)
 		{
 			Border b;
-
-			AddLog (arg.ToString ());
-
 			switch (arg.Type)
 			{
 			case MagicEventType.PlayerHasLost:
@@ -848,7 +828,9 @@ namespace MagicCrow
 				break;
 			case OpenTK.Input.Key.F6:
 				loadWindow ("#MagicCrow.ui.MemberView.crow");
-				IList<string>t;
+				break;
+			case OpenTK.Input.Key.F7:
+				loadWindow ("#MagicCrow.ui.cardList.iml");
 				break;
 			case OpenTK.Input.Key.Space:
 				Players [0].DrawOneCard ();
@@ -908,6 +890,29 @@ namespace MagicCrow
 				CardInstance nextInvalid = Players [0].Library.Cards.Where(c=>!c.Model.IsOk).FirstOrDefault();
 				Players [0].Library.RemoveCard(nextInvalid);
 				Players [0].Hand.AddCard(nextInvalid);
+				break;
+			case OpenTK.Input.Key.T:
+				foreach (CardInstance ci in Players[0].Library.Cards.Where(c=>c.HasEffect(EffectType.Token))){
+					ci.ChangeZone(CardGroupEnum.Hand);			
+				}
+				break;
+			case OpenTK.Input.Key.C:
+				foreach (CardInstance ci in Players[0].Library.Cards.Where(c=>c.HasType(CardTypes.Creature))){
+					ci.ChangeZone(CardGroupEnum.InPlay);
+				}
+				break;
+			case OpenTK.Input.Key.R:				
+				MagicCard mc = null;
+				MagicData.TryLoadCard (Crow.Configuration.Get<String> ("LastPointedCardForDebug"),ref mc);
+				mc.AddCardToHand();
+				break;
+			case OpenTK.Input.Key.M:
+				Players[0].ManaPool += new Mana(10,ManaTypes.White);
+				Players[0].ManaPool += new Mana(10,ManaTypes.Blue);
+				Players[0].ManaPool += new Mana(10,ManaTypes.Red);
+				Players[0].ManaPool += new Mana(10,ManaTypes.Black);
+				Players[0].ManaPool += new Mana(10,ManaTypes.Green);
+
 				break;
 			#endif
 			}

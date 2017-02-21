@@ -167,9 +167,15 @@ namespace MagicCrow
 				for (int i = 0; i < cl.CostList.Count; i++) {
 					Cost cli = cl.CostList [i];
 					tmp = tmp.Pay (ref cli);
+					if (cli == null) {
+						cl.CostList.RemoveAt (i);
+						i--;
+					}
 					if (tmp == null)
 						break;
 				}
+				if (cl.CostList.Count == 0)
+					c = null;
 				return tmp;
 			}
 

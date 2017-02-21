@@ -86,7 +86,7 @@ namespace MagicCrow
 		public IList<CardInstance> CardsInPlayHavingTriggers
 		{
 			get {
-				return Players.SelectMany (p => p.InPlay.Cards.Where (c => c.Model.Triggers.Count()>0)).ToList();
+				return Players.SelectMany (p => p.Deck.Cards.Where (c => c.Model.Triggers.Count()>0)).ToList();
 			}
 		}
 		public IList<CardInstance> CardsInPlayHavingPumpEffects
@@ -258,8 +258,11 @@ namespace MagicCrow
 			//animate only if cards are loaded
 			if (!DecksLoaded) {
 				DecksLoaded = Players.Where (p => !p.DeckLoaded).Count () == 0;
-				if (DecksLoaded)
-					Magic.CurrentGameWin.CreateGLCards ();
+				if (DecksLoaded) {
+					CardInstance.Create3DCardsTextureAndVBO();
+					Players[0].CurrentState = Player.PlayerStates.InitialDraw;
+					Players[1].CurrentState = Player.PlayerStates.InitialDraw;
+				}
 			}
 
 			MagicStack.CheckLastActionOnStack();
@@ -273,6 +276,8 @@ namespace MagicCrow
 			
 		void MagicEngine_MagicEvent (MagicEventArg arg)
 		{
+			Magic.AddLog("MAGIC EVENT: " + arg.ToString());
+
 			#region check triggers
 
 			//check cards in play having trigger effects
@@ -689,7 +694,7 @@ namespace MagicCrow
 				ci.UpdateControler ();
 				if (!ci.HasType (CardTypes.Creature))
 					continue;			
-				ci.UpdatePowerAndToughness ();
+ 				ci.UpdatePowerAndToughness ();
 				ci.UpdatePointsOverlaySurface ();
 				ci.CheckAbilityChanges ();
 				if (ci.AbilityChangesDetected)					

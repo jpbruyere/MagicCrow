@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="UTF-8" ?>
-<Window Caption="Card Model" Height="70%" Width="260" Background="0.1,0.1,0.1,0.4">
+<Window Caption="Card Model" Height="95%" Width="260" Background="0.1,0.1,0.1,0.4" HorizontalAlignment="Right">
 	<Border BorderWidth="1" Margin="10" DataSource="{SelectedCardModel}">
 		<Scroller VerticalScrolling="true" Height="Stretched">
 			<VerticalStack Margin="2" >			

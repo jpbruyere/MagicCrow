@@ -10,7 +10,7 @@ using System.Collections;
 using System.Diagnostics;
 using GGL;
 
-namespace MagicCrow
+namespace MagicCrow.Effects
 {
     [Serializable]
     public class Effect
@@ -57,14 +57,16 @@ namespace MagicCrow
         }
 		#endregion
 
-		protected virtual void ApplySingle(CardInstance _source, object _target = null)
-		{			
-			MagicEngine engine = MagicEngine.CurrentEngine;
 
-			Player player = _target as Player;
-			CardInstance ci = _target as CardInstance;
-			if (ci == null)
-				ci = _source;
+		[NonSerialized]protected Player player;
+		[NonSerialized]protected CardTarget cardTarget;
+
+		protected virtual void ApplySingle(CardInstance _source, object _target = null)
+		{						
+			player = _target as Player;
+			CardInstance cardTarget = _target as CardInstance;
+			if (cardTarget == null)
+				cardTarget = _source;
 			if (player == null && _source != null)
 				player = _source.Controler;
 
@@ -77,10 +79,6 @@ namespace MagicCrow
 				break;
 			case EffectType.Unset:
 				break;
-			case EffectType.ProduceMana:				
-				player.ManaPool += (this as ManaEffect).ProducedMana.Clone();
-				player.NotifyValueChange ("ManaPoolElements", player.ManaPoolElements);
-				break;
 			case EffectType.Loose:
 				break;
 			case EffectType.LooseAllAbilities:
@@ -89,7 +87,7 @@ namespace MagicCrow
 				
 				break;
 			case EffectType.Discard:
-				ci.ChangeZone (CardGroupEnum.Graveyard);
+				cardTarget?.ChangeZone (CardGroupEnum.Graveyard);
 				break;
 			case EffectType.Pump:
 				break;
@@ -99,10 +97,10 @@ namespace MagicCrow
 				(_target as MagicAction).IsCountered = true;
 				break;
 			case EffectType.Destroy:
-				ci.PutIntoGraveyard ();
+				cardTarget.PutIntoGraveyard ();
 				break;
 			case EffectType.Tap:
-				ci.tappedWithoutEvent = true;
+				cardTarget.tappedWithoutEvent = true;
 				break;
 			case EffectType.DoesNotUntap:
 				break;			
@@ -113,7 +111,7 @@ namespace MagicCrow
 			case EffectType.Charm:
 				break;
 			case EffectType.DealDamage:
-				engine.MagicStack.PushOnStack (new Damage (_target as IDamagable, _source, (this as NumericEffect).Amount.GetValue(_source))); 
+				MagicEngine.CurrentEngine.MagicStack.PushOnStack (new Damage (_target as IDamagable, _source, (this as NumericEffect).Amount.GetValue(_source))); 
 				break;
 			case EffectType.ChangeZone:
 				if ((this as ChangeZoneEffect).Destination == CardGroupEnum.Reveal) {
@@ -123,12 +121,12 @@ namespace MagicCrow
 					}
 					break;
 				}
-				ci.Reset ();
-				ci.ChangeZone ((this as ChangeZoneEffect).Destination);
+				cardTarget.Reset ();
+				cardTarget.ChangeZone ((this as ChangeZoneEffect).Destination);
 				if ((this as ChangeZoneEffect).Tapped)
-					ci.tappedWithoutEvent = true;
+					cardTarget.tappedWithoutEvent = true;
 				else
-					ci.tappedWithoutEvent = false;
+					cardTarget.tappedWithoutEvent = false;
 				break;
 			case EffectType.Draw:
 				Animation.DelayMs = 300;
@@ -157,16 +155,16 @@ namespace MagicCrow
 						new Mana (tkEff.Colors.FirstOrDefault ()).ToString ().ToLower () + "_" + tk.Power.ToString () + "_" + tk.Toughness.ToString () +
 						tk.Types.Where (tkt => tkt != CardTypes.Creature).
 						Aggregate<CardTypes,string> (String.Empty, (a, b) => a.ToString ().ToLower () + '_' + b.ToString ().ToLower ()) + ".jpg");
-				else 
-					picPath = System.IO.Path.Combine (picPath, tkEff.Image + ".jpg").Replace(' ','_').ToLower();				
+				else
+					picPath = System.IO.Path.Combine (picPath, tkEff.Image + ".jpg").Replace (' ', '_').ToLower ();				
 
-				//tk.SetTexture(picPath);
+				tk.picturePath = picPath;
 
 				Player[] players;
 
 				switch (tkEff.Owner) {
 				case ControlerType.All:
-					players = engine.Players;
+					players = MagicEngine.CurrentEngine.Players;
 					break;
 				case ControlerType.You:
 					players = new Player[] { _source.Controler};
@@ -184,7 +182,9 @@ namespace MagicCrow
 
 				foreach (Player p in players) {
 					for (int i = 0; i < tkEff.Amount.GetValue (_source, _target); i++) {
-						p.InPlay.AddCard (new CardInstance (tk) { Controler = p, IsToken = true, HasSummoningSickness = true });
+						CardInstance tkinst = new CardInstance (tk) { Controler = p, IsToken = true, HasSummoningSickness = true };
+						tkinst.CreateGLCard ();
+						p.InPlay.AddCard (tkinst);
 					}
 					p.InPlay.UpdateLayout ();
 					//engine.UpdateOverlays ();
@@ -206,7 +206,7 @@ namespace MagicCrow
 			case EffectType.RemoveCounterAll:
 				break;
 			case EffectType.ChangeZoneAll:
-				CardGroup orig = ci.Controler.allGroups.Where (ag => ag.GroupName == (this as ChangeZoneEffect).Origin).FirstOrDefault ();
+				CardGroup orig = cardTarget.Controler.allGroups.Where (ag => ag.GroupName == (this as ChangeZoneEffect).Origin).FirstOrDefault ();
 				while (orig.Cards.Count > 0) {
 					CardInstance cc = orig.Cards.FirstOrDefault ();
 					cc.Reset ();
@@ -217,13 +217,22 @@ namespace MagicCrow
 						cc.tappedWithoutEvent = false;
 				}
 				orig.UpdateLayout ();
-				ci.Controler.allGroups.Where (ag => ag.GroupName == (this as ChangeZoneEffect).Destination).FirstOrDefault ().UpdateLayout ();
+				cardTarget.Controler.allGroups.Where (ag => ag.GroupName == (this as ChangeZoneEffect).Destination).FirstOrDefault ().UpdateLayout ();
 				break;
 			case EffectType.DamageAll:
 				break;
 			case EffectType.UntapAll:
 				break;
 			case EffectType.PutCounter:
+				AddOrRemoveCounter pce = this as AddOrRemoveCounter;
+				if (pce.Type == AddOrRemoveCounter.CounterType.P1P1) {
+					EffectGroup eg = new EffectGroup ();
+					//eg.Mode = ModeEnum.Continuous;
+					eg.Affected = new CardTarget (TargetType.Self);
+					eg.Add (new NumericEffect (EffectType.AddTouchness,1));
+					eg.Add (new NumericEffect (EffectType.AddPower,1));
+					cardTarget.Effects.Add(eg);
+				}
 				break;
 			case EffectType.PutCounterAll:
 				break;
@@ -298,8 +307,6 @@ namespace MagicCrow
 			case EffectType.Play:
 				break;
 			case EffectType.BecomesBlocked:
-				break;
-			case EffectType.AddOrRemoveCounter:
 				break;
 			case EffectType.WinsGame:
 				break;

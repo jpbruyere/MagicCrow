@@ -70,6 +70,7 @@
 			</ListBox>-->
 			<Label Text="{Oracle}" Width="Stretched" Multiline="true"/>
 			<Button Caption="Save in cache" MouseClick="onSaveInCache"/>
+			<Button Caption="Add To Hand" MouseClick="onAddToHand"/>
 		</VerticalStack>
 	</Border>	
 </Window>

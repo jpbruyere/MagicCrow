@@ -188,6 +188,20 @@ namespace MagicCrow
 		{			
 			MagicData.CacheCard (this);
 		}
+		public void AddCardToHand(){
+			CardInstance tmp = Magic.CurrentGameWin.Players[0].Deck.AddCard(this);
+
+			tmp.CreateGLCard ();
+
+			tmp.Controler = Magic.CurrentGameWin.Players[0];
+			tmp.ResetPositionAndRotation();
+			tmp.yAngle = MathHelper.Pi;
+			tmp.Controler.Hand.AddCard(tmp,true);
+		}
+		void onAddToHand (object sender, MouseButtonEventArgs e)
+		{
+			AddCardToHand ();
+		}
 		void onReparse (object sender, MouseButtonEventArgs e)
 		{						
 			MagicCard c = this;

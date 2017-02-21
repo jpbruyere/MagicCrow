@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Diagnostics;
 using System.IO;
+using MagicCrow.Effects;
 
 namespace MagicCrow
 {
@@ -243,9 +244,11 @@ namespace MagicCrow
 						a.Effects.TrigEnd = new Trigger(MagicEventType.EndTurn);
 						break;
 					case "Attach":
-					case "Animate":
 						a.AbilityType = AbilityEnum.Attach;
 						a.RequiredTargetCount = 1;
+						break;
+					case "Animate":
+						a.Effects.Add(new TokenEffect());
 						break;
 					case "Effect":
 						break;
@@ -311,7 +314,9 @@ namespace MagicCrow
 						break;
 					case "UntapAll":
 						break;
-					case "PutCounter":
+					case "PutCounter":						
+						numEff = new AddOrRemoveCounter(EffectType.AddOrRemoveCounter);
+						a.Effects.Add(numEff);
 						break;
 					case "PutCounterAll":
 						break;
@@ -880,8 +885,15 @@ namespace MagicCrow
 				case AbilityFieldsEnum.Planeswalker:
 					break;
 				case AbilityFieldsEnum.CounterNum:
+					if (int.TryParse (value, out v))
+						numEff.Amount = v;
+					else
+						Debugger.Break ();
+						//SVarToResolve.RegisterSVar(value, a, a.GetType().GetProperty("RequiredTargetCount"));
 					break;
 				case AbilityFieldsEnum.CounterType:
+					(numEff as AddOrRemoveCounter).Type =
+						(AddOrRemoveCounter.CounterType)Enum.Parse(typeof(AddOrRemoveCounter.CounterType), value, true);					
 					break;
 				case AbilityFieldsEnum.Ultimate:
 					break;
