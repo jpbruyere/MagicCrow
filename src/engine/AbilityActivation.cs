@@ -69,9 +69,9 @@ namespace MagicCrow
 		#endregion
 
 		bool validated = false;
-
 		List<object> selectedTargets = new List<object> ();
-		public Ability Source;
+
+		public Abilities.Ability Source;
 
 
 		/// <summary>
@@ -140,8 +140,10 @@ namespace MagicCrow
 		public override void Validate ()
 		{			
 			validated = true;
-			if (!IsComplete && MagicEngine.CurrentEngine.MagicStack.NextActionOnStack == this)
-				MagicEngine.CurrentEngine.MagicStack.CancelLastActionOnStack ();
+			if (IsComplete) {
+				foreach (object t in selectedTargets)
+					MagicEngine.CurrentEngine.RaiseMagicEvent (new MagicEventArg (Triggers.Mode.BecomesTarget, this, t));				
+			}
 		}
 		public override bool TryToAddTarget (object target)
 		{

@@ -42,8 +42,8 @@ namespace MagicCrow
 
 		int _requiredTargetCount = -1;
 		string targetPrompt = "";
-		AttributGroup<Target> _validTargets;
 		List<Object> _selectedTargets = new List<object> ();
+		public AttributGroup<Target> ValidTargets;
 		public Trigger Trigger;
 		public AbilityCategory Category;
 		public AbilityEnum AbilityType = AbilityEnum.Unset;
@@ -109,16 +109,6 @@ namespace MagicCrow
 					_requiredTargetCount > 0; 
 			} 
 		}			
-		public AttributGroup<Target> ValidTargets {
-			get { return _validTargets; }
-			set { _validTargets = value; }
-		}			
-		public List<Object> SelectedTargets {
-			get { return _selectedTargets; }
-			set {
-				_selectedTargets = value;
-			}
-		}
 		public string TargetPrompt {
 			get {
 				return string.IsNullOrWhiteSpace (targetPrompt) ? "\tSelect " + ValidTargets?.ToString () : targetPrompt;
@@ -728,6 +718,7 @@ namespace MagicCrow
 					numEff = null;
 					break;
 				case AbilityFieldsEnum.Defined:
+					
 					break;
 				case AbilityFieldsEnum.Triggers:
 					break;

@@ -31,7 +31,7 @@ namespace MagicCrow
         public string Name;
         public Cost Cost;
         public AttributGroup<CardTypes> Types = new AttributGroup<CardTypes>();
-        public List<Ability> Abilities = new List<Ability>();
+		public List<Abilities.Ability> Abilities = new List<Abilities.Ability>();
         public List<Trigger> Triggers = new List<Trigger>();
 		public List<EffectGroup> SpellEffects = new List<EffectGroup> ();
         public List<string> Konstrains = new List<string>();
@@ -220,7 +220,7 @@ namespace MagicCrow
 			Name = "";
 			Cost = null;
 			Types = new AttributGroup<CardTypes>();
-			Abilities = new List<Ability>();
+			Abilities = new List<Abilities.Ability>();
 			Triggers = new List<Trigger>();
 			SpellEffects = new List<EffectGroup> ();
 			Konstrains = new List<string>();

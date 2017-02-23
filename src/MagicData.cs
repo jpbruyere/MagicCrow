@@ -208,7 +208,7 @@ namespace MagicCrow
 						}
 						break;
 					case "a":
-						c.Abilities.Add(Ability.Parse(tmp[1]));
+						c.Abilities.Add(Abilities.Ability.Parse(tmp[1]));
 						break;
 					case "oracle":
 						c.Oracle = string.Join ("\n", tmp.ToList ().GetRange (1, tmp.Length - 1).ToArray ());

@@ -22,15 +22,240 @@ namespace MagicCrow
 	}
 
 	public class MagicEngine 
-	{
-		public delegate void MagicEventHandler (MagicEventArg arg);
-
-		public static event MagicEventHandler MagicEvent;
+	{		
 		public static MagicEngine CurrentEngine;
+
+		#region EVENT HANDLERS
+		public event EventHandler<MagicEventArg> MagicEvent;
+		public event EventHandler<MagicEventArg> Attached;
+		public event EventHandler<MagicEventArg> AttackerBlocked;
+		public event EventHandler<MagicEventArg> AttackerUnblocked;
+		public event EventHandler<MagicEventArg> AttackersDeclared;
+		public event EventHandler<MagicEventArg> Attacks;
+		public event EventHandler<MagicEventArg> BecomeMonstrous;
+		public event EventHandler<MagicEventArg> BecomeTarget;
+		public event EventHandler<MagicEventArg> BlockersDeclared;
+		public event EventHandler<MagicEventArg> Blocks;
+		public event EventHandler<MagicEventArg> Championed;
+		public event EventHandler<MagicEventArg> ChangesController;
+		public event EventHandler<ChangeZoneEventArg> ChangesZone;
+		public event EventHandler<MagicEventArg> Clashed;
+		public event EventHandler<MagicEventArg> CombatDamageDoneOnce;
+		public event EventHandler<MagicEventArg> CounterAdded;
+		public event EventHandler<MagicEventArg> CounterRemoved;
+		public event EventHandler<MagicEventArg> Countered;
+		public event EventHandler<MagicEventArg> Cycled;
+		public event EventHandler<MagicEventArg> DamageDone;
+		public event EventHandler<MagicEventArg> DealtCombatDamageOnce;
+		public event EventHandler<MagicEventArg> Destroyed;
+		public event EventHandler<MagicEventArg> Devoured;
+		public event EventHandler<MagicEventArg> Discarded;
+		public event EventHandler<MagicEventArg> Drawn;
+		public event EventHandler<MagicEventArg> Evolved;
+		public event EventHandler<MagicEventArg> FlippedCoin;
+		public event EventHandler<MagicEventArg> LandPlayed;
+		public event EventHandler<MagicEventArg> LifeLost;
+		public event EventHandler<MagicEventArg> LifeGained;
+		public event EventHandler<MagicEventArg> LoseGame;
+		public event EventHandler<MagicEventArg> NewGame;
+		public event EventHandler<MagicEventArg> PayCumulativeUpkeep;
+		public event EventHandler<MagicEventArg> PayEcho;
+		public event EventHandler<PhaseEventArg> Phase;
+		public event EventHandler<MagicEventArg> PhaseIn;
+		public event EventHandler<MagicEventArg> PhaseOut;
+		public event EventHandler<MagicEventArg> PlanarDice;
+		public event EventHandler<MagicEventArg> PlaneWalked;
+		public event EventHandler<MagicEventArg> PlanesWalkedFrom;
+		public event EventHandler<MagicEventArg> Sacrificed;
+		public event EventHandler<MagicEventArg> Scry;
+		public event EventHandler<MagicEventArg> SearchedLibrary;
+		public event EventHandler<MagicEventArg> SetInMotion;
+		public event EventHandler<MagicEventArg> Shuffled;
+		public event EventHandler<SpellEventArg> SpellCast;
+		public event EventHandler<MagicEventArg> AbilityCast;
+		public event EventHandler<MagicEventArg> SpellAbilityCast;
+		public event EventHandler<MagicEventArg> Tap;
+		public event EventHandler<MagicEventArg> Untap;
+		public event EventHandler<MagicEventArg> TapsForMana;
+		public event EventHandler<MagicEventArg> Transformed;
+		public event EventHandler<MagicEventArg> TurnFaceUp;
+		public event EventHandler<MagicEventArg> Unequip;
+		public event EventHandler<MagicEventArg> Vote;
+		#endregion
 
 		public void RaiseMagicEvent (MagicEventArg arg)
 		{
-			MagicEvent (arg);
+			Magic.AddLog("EVENT => " + arg.ToString());
+
+			switch (arg.Type) {
+			case MagicCrow.Triggers.Mode.Always:
+				break;
+			case MagicCrow.Triggers.Mode.Attached:
+				Attached.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.AttackerBlocked:
+				AttackerBlocked.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.AttackerUnblocked:
+				AttackerUnblocked.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.AttackersDeclared:
+				AttackersDeclared.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.Attacks:
+				Attacks.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.BecomeMonstrous:
+				BecomeMonstrous.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.BecomesTarget:
+				Attached.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.BlockersDeclared:
+				BlockersDeclared.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.Blocks:
+				Blocks.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.Championed:
+				Championed.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.ChangesController:
+				ChangesController.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.ChangesZone:
+				ChangesZone.Raise (this, arg as ChangeZoneEventArg);
+				break;
+			case MagicCrow.Triggers.Mode.Clashed:
+				Clashed.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.CombatDamageDoneOnce:
+				CombatDamageDoneOnce.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.CounterAdded:
+				CounterAdded.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.CounterRemoved:
+				CounterRemoved.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.Countered:
+				Countered.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.Cycled:
+				Cycled.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.DamageDone:
+				DamageDone.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.DealtCombatDamageOnce:
+				DealtCombatDamageOnce.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.Destroyed:
+				Destroyed.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.Devoured:
+				Devoured.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.Discarded:
+				Discarded.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.Drawn:
+				Drawn.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.Evolved:
+				Evolved.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.FlippedCoin:
+				FlippedCoin.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.LandPlayed:
+				LandPlayed.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.LifeGained:
+				LifeGained.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.LifeLost:
+				LifeLost.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.LosesGame:
+				LoseGame.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.NewGame:
+				NewGame.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.PayCumulativeUpkeep:
+				PayCumulativeUpkeep.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.PayEcho:
+				PayEcho.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.Phase:
+				Phase.Raise (this, arg as PhaseEventArg);
+				break;
+			case MagicCrow.Triggers.Mode.PhaseIn:
+				PhaseIn.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.PhaseOut:
+				PhaseOut.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.PlanarDice:
+				PlanarDice.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.PlaneswalkedTo:
+				Attached.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.PlaneswalkedFrom:
+				PlanesWalkedFrom.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.Sacrificed:
+				Sacrificed.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.Scry:
+				Scry.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.SearchedLibrary:
+				SearchedLibrary.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.SetInMotion:
+				SetInMotion.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.Shuffled:
+				Shuffled.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.SpellCast:
+				SpellCast.Raise (this, arg as SpellEventArg);
+				break;
+			case MagicCrow.Triggers.Mode.AbilityCast:
+				AbilityCast.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.SpellAbilityCast:
+				SpellAbilityCast.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.Taps:
+				Attached.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.Untaps:
+				Attached.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.TapsForMana:
+				TapsForMana.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.Transformed:
+				Transformed.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.TurnFaceUp:
+				TurnFaceUp.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.Unequip:
+				Unequip.Raise (this, arg);
+				break;
+			case MagicCrow.Triggers.Mode.Vote:
+				Vote.Raise (this, arg);
+				break;
+			default:
+				break;
+			}
+			MagicEvent.Raise (this, arg);
 		}
 
 		public volatile EngineStates State = EngineStates.Stopped;
@@ -39,10 +264,11 @@ namespace MagicCrow
 
 		public bool DecksLoaded = false;
 
-		int _currentPlayer;
+		int _curPlayerIdx;
 		int _priorityPlayer;
 		int _interfacePlayer = 0;//index of player using this interface
-		GamePhases _currentPhase;
+
+		public GamePhases CurrentPhase;
 
 		//public int currentAttackingCreature = 0;    //combat damage resolution
 		//public Damage currentDamage;
@@ -51,7 +277,7 @@ namespace MagicCrow
 		/// player having his turn running
 		/// </summary>
 		public Player cp {
-			get { return Players [currentPlayerIndex]; }
+			get { return Players [CurPlayerIdx]; }
 		}
 		/// <summary>
 		/// player controling the interface, redirection card click
@@ -96,18 +322,20 @@ namespace MagicCrow
 			}
 		}
 		//public List<ActiveEffect> SpellEffectsInPlay = new List<ActiveEffect> ();
-
-		public int currentPlayerIndex {
-			get { return _currentPlayer; }
+		/// <summary>
+		/// Current Player having his turn
+		/// </summary>
+		public int CurPlayerIdx {
+			get { return _curPlayerIdx; }
 			set
 			{ 
-				if (value == _currentPlayer)
+				if (value == _curPlayerIdx)
 					return;
 
 				if (value >= Players.Length)
-					_currentPlayer = 0;
+					_curPlayerIdx = 0;
 				else
-					_currentPlayer = value;
+					_curPlayerIdx = value;
 
 			}
 		}
@@ -130,8 +358,6 @@ namespace MagicCrow
 					newPp = 0;
 
 				_priorityPlayer = newPp;
-				Players [oldPp].UpdateUi ();
-				Players [_priorityPlayer].UpdateUi ();
 			}
 		}
 		/// <summary>
@@ -140,59 +366,22 @@ namespace MagicCrow
 		public int interfacePlayer {
 			get { return _interfacePlayer; }
 			set { _interfacePlayer = value; }
-		}
-
-		public GamePhases CurrentPhase {
-			get { return _currentPhase; }
-			set { _currentPhase = value; }
-		}
+		}			
 
 		public void SwitchToNextPhase ()
 		{
-			MagicEvent (new PhaseEventArg {
-				Type = MagicEventType.EndPhase,
-				Phase = _currentPhase,
-				Player = Players [currentPlayerIndex]
+			MagicEvent.Raise (this, new PhaseEventArg {
+				Type = MagicCrow.Triggers.Mode.EndPhase,
+				Phase = CurrentPhase,
+				source = Players [CurPlayerIdx]
 			});
 		}
 		public void SwitchToNextPlayer ()
 		{
-			MagicEvent (new MagicEventArg {
+			MagicEvent (this, new MagicEventArg {
 				Type = MagicEventType.EndTurn
 				//Player = Players [currentPlayer]
 			});
-		}
-		public void GivePriorityToNextPlayer ()
-		{
-			//first cancel incomplete action of priority player
-			if (MagicStack.NextActionOnStack != null) {
-				//cardsource could be null for action request by engine (ex: discard at cleanup)
-				if (MagicStack.NextActionOnStack.CardSource == null){
-					pp.PhaseDone = false;
-					return;
-				}
-				if (MagicStack.NextActionOnStack.CardSource.Controler == pp){
-					if (!MagicStack.NextActionOnStack.IsComplete) {
-						if (!MagicStack.CancelLastActionOnStack ()) {
-							pp.PhaseDone = false;
-							return;
-						}
-					}
-				}
-			}
-
-			priorityPlayer++;
-
-			if (!(pp is AiPlayer) && CurrentPhase != GamePhases.DeclareBlocker)
-				startChrono ();
-			else
-				stopChrono ();
-
-			if (MagicStack.NextActionOnStack == null) {
-				if (priorityPlayer == _currentPlayer && cp.PhaseDone)
-					SwitchToNextPhase ();
-			} else if (MagicStack.NextActionOnStack.CardSource.Controler == pp)
-				MagicStack.ResolveStack ();
 		}
 
 		public void startChrono ()
@@ -225,56 +414,94 @@ namespace MagicCrow
 			MagicStack = new MagicStack (this);
 
 			Players = _players;
-			MagicEvent += new MagicEventHandler (MagicEngine_MagicEvent);
+
+			MagicEvent += MagicEngine_MagicEvent;
+			Phase += MagicEngine_Phase;
 		}
+
 		#endregion
 
 		void startGame()
 		{
-			_currentPhase = GamePhases.Main1;
+			CurrentPhase = GamePhases.Main1;
 			cp.AllowedLandsToBePlayed = 1;//it's normaly set in the untap phase...
-			cp.UpdateUi ();
 			State = EngineStates.CurrentPlayer;
-			MagicEvent (new PhaseEventArg {
-				Type = MagicEventType.BeginPhase,
-				Phase = _currentPhase,
-				Player = cp
+			MagicEvent (this, new PhaseEventArg {
+				Type = MagicCrow.Triggers.Mode.Phase,
+				Phase = CurrentPhase,
+				source = cp
 			});
 		}
-
+		void initGame(){
+			CardInstance.Create3DCardsTextureAndVBO();
+			Players[0].CurrentState = Player.PlayerStates.InitialDraw;
+			Players[1].CurrentState = Player.PlayerStates.InitialDraw;
+		}
 		public void Process ()
 		{
-			//temp fix to have begin not handle before end event in Magic
-			//but those kind of sync problem will surely rise 
-			if (raiseBeginPhase) {
-				raiseBeginPhase = false;
-				MagicEvent (new PhaseEventArg {
-					Type = MagicEventType.BeginPhase,
-					Phase = _currentPhase,
-					Player = Players [currentPlayerIndex]
-				});
-			}
-				
 			//animate only if cards are loaded
 			if (!DecksLoaded) {
 				DecksLoaded = Players.Where (p => !p.DeckLoaded).Count () == 0;
-				if (DecksLoaded) {
-					CardInstance.Create3DCardsTextureAndVBO();
-					Players[0].CurrentState = Player.PlayerStates.InitialDraw;
-					Players[1].CurrentState = Player.PlayerStates.InitialDraw;
-				}
+				if (DecksLoaded)
+					initGame ();
 			}
-
-			MagicStack.CheckLastActionOnStack();
 
 			foreach (Player p in Players)
 				p.Process ();
+		}
 
-			if (pp.PhaseDone)
-				GivePriorityToNextPlayer();
+		/// <summary>
+		/// Validate current action on stack or pass, cancel action if not complete
+		/// </summary>
+		public void Validate(){
+			
+			if (MagicStack.Count == 0) {
+				priorityPlayer++;
+				if (pp == cp)
+					SwitchToNextPhase ();
+				return;
+			}
+
+			MagicStackElement mse = MagicStack.Peek ();
+
+			if (mse is Damage)
+				return;
+
+			if (mse.Player != pp) {
+				priorityPlayer++;
+				if (mse.Player == pp)
+					MagicStack.Resolve ();
+				return;
+			}
+
+			if (mse is MagicChoice) {
+				if (!mse.IsMandatory)
+					MagicStack.PopMagicStackElement ();
+				else
+					Magic.AddLog("Cannot cancel mandatory choice.");
+				return;
+			}
+			MagicAction ma = mse as MagicAction;
+			if (ma.IsComplete) {
+				MagicStack.Resolve ();
+				return;
+			}
+
+			ma.Validate ();
+
+			if (ma.IsComplete) {
+				priorityPlayer++;
+				return;
+			}
+
+			//try to cancel ma
+			if (ma.IsMandatory)
+				Magic.AddLog ("Unable to cancel mandatory action");
+			else
+				MagicStack.PopMagicStackElement ();
 		}
 			
-		void MagicEngine_MagicEvent (MagicEventArg arg)
+		void MagicEngine_MagicEvent (object sender, MagicEventArg arg)
 		{
 			Magic.AddLog("MAGIC EVENT: " + arg.ToString());
 
@@ -294,9 +521,9 @@ namespace MagicCrow
 				List<EffectGroup> egToRemove = new List<EffectGroup>();
 				foreach (EffectGroup eg in ci.PumpEffect) {
 					if (eg.TrigEnd != null){
-						if (eg.TrigEnd.Type != arg.Type)
+						if (eg.TrigEnd.Mode != arg.Type)
 							continue;
-						switch (eg.TrigEnd.Type) {
+						switch (eg.TrigEnd.Mode) {
 						case MagicEventType.EndTurn:
 							egToRemove.Add(eg);
 							break;
@@ -317,26 +544,6 @@ namespace MagicCrow
 						return;
 				startGame ();
 				break;
-			case MagicEventType.BeginPhase:
-				processPhaseBegin (arg as PhaseEventArg);
-				break;
-			case MagicEventType.EndPhase:
-				processPhaseEnd (arg as PhaseEventArg);
-				break;
-			case MagicEventType.PlayLand:
-				break;
-			case MagicEventType.ActivateAbility:
-				break;
-			case MagicEventType.CastSpell:
-				break;
-			case MagicEventType.TapCard:
-				break;
-			case MagicEventType.ChangeZone:
-				if (arg.Source.IsToken)
-					arg.Source.CurrentGroup.Cards.Remove (arg.Source);
-				break;
-			case MagicEventType.Unset:
-				break;
 			default:
 				break;
 			}
@@ -347,12 +554,17 @@ namespace MagicCrow
 				p.InPlay.UpdateLayout ();			
 		}
 
+		void MagicEngine_Phase (object sender, PhaseEventArg e)
+		{
+			if (e.Type == MagicCrow.Triggers.Mode.Phase)
+				processPhaseBegin (e);
+			else
+				processPhaseEnd (e);
+		}
+
 		void processPhaseBegin (PhaseEventArg pea)
 		{
-			foreach (Player p in Players)
-				p.PhaseDone = false;
-			
-			priorityPlayer = _currentPlayer;
+			priorityPlayer = _curPlayerIdx;
 
 			switch (pea.Phase) {
 			case GamePhases.Untap:
@@ -361,18 +573,16 @@ namespace MagicCrow
 				cp.CardToDraw = 1;
 				foreach (CardInstance c in cp.InPlay.Cards) {
 					c.HasSummoningSickness = false;
-					c.TryToUntap ();
+					c.IsTapped = false;
 				}
 				break;
 			case GamePhases.Upkeep:
 				break;
-			case GamePhases.Draw:
-				//if (pea.Player == cp) {
-					while(cp.CardToDraw > 0){
-						cp.DrawOneCard ();
-						cp.CardToDraw--;
-					}
-				//}
+			case GamePhases.Draw:				
+				while(cp.CardToDraw > 0){
+					cp.DrawOneCard ();
+					cp.CardToDraw--;
+				}
 				break;
 			case GamePhases.Main1:
 			case GamePhases.Main2:
@@ -390,66 +600,65 @@ namespace MagicCrow
 				foreach (CardInstance ac in cp.AttackingCreature.Where
 					(cpac => cpac.HasAbility(AbilityEnum.FirstStrike) || 
 						cpac.HasAbility(AbilityEnum.DoubleStrike))) {
-					Damage d = new Damage (null, ac, ac.Power);
+					
+					Damage d = new Damage (null, ac, ac.Power, true);
 
 					foreach (CardInstance def in ac.BlockingCreatures.Where
 						(cpac => cpac.HasAbility(AbilityEnum.FirstStrike) || 
 							cpac.HasAbility(AbilityEnum.DoubleStrike)))
-						MagicStack.PushOnStack (new Damage (ac, def, def.Power));
+						new Damage (ac, def, def.Power, true).Deal();
 
 					if (ac.BlockingCreatures.Count == 0) {
 						d.Target = cp.Opponent;
-						MagicStack.PushOnStack (d);
+						d.Deal ();
 					} else if (ac.BlockingCreatures.Count == 1) {
 						d.Target = ac.BlockingCreatures [0];
-						MagicStack.PushOnStack (d);
+						d.Deal ();
 					} else {
 						//push damages one by one for further resolution
 						for (int i = 0; i < ac.Power; i++)
-							MagicStack.PushOnStack (new Damage (null, d.Source, 1));
+							MagicStack.PushOnStack (new Damage (null, d.Source, 1, true));
 					}
 				}
-
-				MagicStack.CheckStackForUnasignedDamage ();
 				break;
 			case GamePhases.CombatDamage:
 				Chrono.Reset ();
 				foreach (CardInstance ac in cp.AttackingCreature) {
-					Damage d = new Damage (null, ac, ac.Power);
+					if (ac.Power <= 0)
+						continue;
+					
+					Damage d = new Damage (null, ac, ac.Power, true);
 
 					foreach (CardInstance def in ac.BlockingCreatures.Where
 						(cpac => !cpac.HasAbility(AbilityEnum.FirstStrike)))
-						MagicStack.PushOnStack (new Damage (ac, def, def.Power));
+						new Damage (ac, def, def.Power, true).Deal();
 
 					if (ac.HasAbility (AbilityEnum.FirstStrike)&&!ac.HasAbility (AbilityEnum.DoubleStrike))
 						return;
 					
 					if (ac.BlockingCreatures.Count == 0) {
 						d.Target = cp.Opponent;
-						MagicStack.PushOnStack (d);
+						d.Deal();
 					} else if (ac.BlockingCreatures.Count == 1) {
 						d.Target = ac.BlockingCreatures [0];
-						MagicStack.PushOnStack (d);
+						d.Deal();
 					} else {
 						for (int i = 0; i < ac.Power; i++)
-							MagicStack.PushOnStack (new Damage (null, d.Source, 1));
+							MagicStack.PushOnStack (new Damage (null, d.Source, 1, true));
 					}
-				}
-
-				MagicStack.CheckStackForUnasignedDamage ();
+				}					
 				break;
 			case GamePhases.EndOfCombat:
 				break;
 			case GamePhases.EndOfTurn:
 				break;
 			case GamePhases.CleanUp:
-				foreach (Player p in Players) {
-					foreach (CardInstance ac in p.InPlay.Cards) {
-						if (ac.Damages.Count > 0) {
-							ac.Damages.Clear ();
-						}
-					}
+				foreach (CardInstance ac in Players.SelectMany(p => p.InPlay.Cards)) {
+					ac.Damages.Clear ();
+					ac.HasCombatDamage = false;
+					ac.HasDealtCombatDamages = false;
 				}
+				
 				int cardDiff = cp.Hand.Cards.Count - 7;
 				Ability discard = new Ability (EffectType.Discard);
 				discard.ValidTargets += new CardTarget () { ValidGroup = CardGroupEnum.Hand, Controler = ControlerType.You };
@@ -468,10 +677,6 @@ namespace MagicCrow
 		}
 		void processPhaseEnd (PhaseEventArg pea)
 		{
-			MagicStack.ClearIncompleteActions ();
-
-			MagicStack.ResolveStack ();
-
 			switch (pea.Phase) {
 			case GamePhases.Untap:
 				break;
@@ -487,18 +692,27 @@ namespace MagicCrow
 			case GamePhases.BeforeCombat:
 				break;
 			case GamePhases.DeclareAttacker:
-				if (!pea.Player.HasAttackingCreature) {
+				if (!pea.SourcePlayer.HasAttackingCreature) {
 					CurrentPhase = GamePhases.EndOfCombat;
 					break;
 				}
-				foreach (CardInstance c in pea.Player.AttackingCreature) {					
+				foreach (CardInstance c in pea.SourcePlayer.AttackingCreature) {					
 					if (!c.IsTapped && !c.HasAbility (AbilityEnum.Vigilance)) {
-						c.Tap ();
-						RaiseMagicEvent(new MagicEventArg(MagicEventType.Attack,c));
+						c.IsTapped = true;
+						RaiseMagicEvent (new MagicEventArg (Triggers.Mode.Attacks, c));
 					}
 				}
+				RaiseMagicEvent (new MagicEventArg (Triggers.Mode.AttackersDeclared, pea.SourcePlayer));
 				break;
-			case GamePhases.DeclareBlocker:				
+			case GamePhases.DeclareBlocker:
+				foreach (CardInstance c in pea.SourcePlayer.AttackingCreature) {
+					if (c.BlockingCreatures?.Count > 0) {
+						RaiseMagicEvent (new MagicEventArg (Triggers.Mode.AttackerBlocked, c, c.BlockingCreatures));
+						foreach (CardInstance bc in c.BlockingCreatures)
+							RaiseMagicEvent (new MagicEventArg (Triggers.Mode.Blocks, bc, c));						
+					}else
+						RaiseMagicEvent (new MagicEventArg (Triggers.Mode.AttackerUnblocked, c));
+				}
 				break;
 			case GamePhases.FirstStrikeDame:
 				break;
@@ -520,15 +734,8 @@ namespace MagicCrow
 			case GamePhases.EndOfTurn:
 				break;
 			case GamePhases.CleanUp:
-				MagicEvent (new MagicEventArg {
-					Type = MagicEventType.EndTurn
-						//Player = Players [currentPlayer]
-				});
-				currentPlayerIndex++;
-
-				priorityPlayer = _currentPlayer;
-				CurrentPhase = GamePhases.Untap;
-				//Players[_priorityPlayer].pbTimer.Visible = true;					
+				CurPlayerIdx++;
+				priorityPlayer = _curPlayerIdx;
 				break;
 			}
 
@@ -540,11 +747,15 @@ namespace MagicCrow
 
 			if (pea.Phase != GamePhases.CleanUp)
 				CurrentPhase++;
+			else
+				CurrentPhase = GamePhases.Untap;
 
-			raiseBeginPhase = true;
-		}
-
-		bool raiseBeginPhase = false;
+			MagicEvent.Raise (this, new PhaseEventArg {
+				Type = MagicCrow.Triggers.Mode.Phase,
+				Phase = CurrentPhase,
+				source = Players [CurPlayerIdx]
+			});
+		}			
 
 		public void ClickOnCard (CardInstance c)
 		{
@@ -564,17 +775,15 @@ namespace MagicCrow
 				//player controling interface may only click in his own hand
 				if (c.Controler != ip)
 					return;
-				if (!MagicStack.CancelLastActionOnStack())
-					return;
+				//TODO: put here fast cancel and switch between spell cast
 				if (CurrentPhase == GamePhases.Main1 || CurrentPhase == GamePhases.Main2){
 					if (c.HasType(CardTypes.Land)) {
 						if (cp.AllowedLandsToBePlayed>0){
 							c.ChangeZone (CardGroupEnum.InPlay);
 							cp.AllowedLandsToBePlayed--;
-							MagicEvent (new MagicEventArg (MagicEventType.PlayLand, c));
+							RaiseMagicEvent (new MagicEventArg(Triggers.Mode.LandPlayed, c));
 						}
 					} else {
-						//Magic.CurrentGameWin.CursorVisible = true;
 						MagicStack.PushOnStack(new Spell (c));
 					}
 				}else if (CurrentPhase != GamePhases.CleanUp && CurrentPhase != GamePhases.Untap){
@@ -674,17 +883,6 @@ namespace MagicCrow
 		}
 		#endregion
 
-//		public void UpdateOverlays()
-//		{
-//			foreach (CardInstance ci in CardsInPlayHavingEffects) {
-//				foreach (EffectGroup eg in ci.Effects) {
-//					foreach (CardTarget ct in eg.Affected.Values.OfType<CardTarget>()) {
-//						foreach (CardInstance c in ct.GetValidTargetsInPlay (ci))
-//							c.UpdatePointsOverlaySurface ();
-//					}	
-//				}
-//			}			
-//		}
 		/// <summary>
 		/// Checks controler, power, toughness and ability changes with effects, damages and so on
 		/// </summary>

@@ -308,6 +308,7 @@ namespace MagicCrow
 		int _toughness = int.MinValue;
 		bool _isTapped = false;
 		bool _combating;
+		bool hasCombatDamage;
 		Player _controler;
 
 		Player _originalControler;
@@ -400,6 +401,7 @@ namespace MagicCrow
 			c.AttachedTo = this;
 			AttachedCards.Add (c);
 
+			MagicEngine.CurrentEngine.RaiseMagicEvent (this, new MagicEventArg (Triggers.Mode.Attached, this, c));
 			updateArrows ();
 
 			Controler.InPlay.UpdateLayout ();
@@ -409,6 +411,7 @@ namespace MagicCrow
 			c.AttachedTo = null;
 			AttachedCards.Remove (c);
 
+			MagicEngine.CurrentEngine.RaiseMagicEvent (this, new MagicEventArg (Triggers.Mode.Detached, this, c));
 			updateArrows ();
 
 			Controler.InPlay.UpdateLayout ();
@@ -428,18 +431,52 @@ namespace MagicCrow
 			}
 		}
 		#endregion
-			
+
+		public bool hasDealtCombatDamages;
+
+		public bool HasDealtCombatDamages {
+			get {
+				return hasDealtCombatDamages;
+			}
+			set {
+				if (value == hasDealtCombatDamages)
+					return;
+				hasDealtCombatDamages = value;
+				if (hasDealtCombatDamages)
+					MagicEngine.CurrentEngine.RaiseMagicEvent (new MagicEventArg (MagicCrow.Triggers.Mode.DealtCombatDamageOnce, this));									
+			}
+		}
+
+		#region IDamagable interface
+		public bool HasCombatDamage {
+			get { return hasCombatDamage; }
+			set {
+				if (hasCombatDamage == value)
+					return;
+				hasCombatDamage = value;
+				if (hasCombatDamage)
+					MagicEngine.CurrentEngine.RaiseMagicEvent (new MagicEventArg (MagicCrow.Triggers.Mode.CombatDamageDoneOnce, this));									
+			}
+		}			
         public void AddDamages(Damage d)
         {
+			if (d.Amount <= 0)
+				return;
+			
             Damages.Add(d);
-            
-            MagicEngine.CurrentEngine.RaiseMagicEvent(new DamageEventArg(d));
-            
+
+			MagicEngine.CurrentEngine.RaiseMagicEvent(new DamageEventArg(d));
+
+			if (d.IsCombatDamage)
+				HasCombatDamage = true;
+			
             if (Toughness < 1)
-                PutIntoGraveyard();
+                Destroy(d);
             else
                 UpdatePointsOverlaySurface();
         }
+		#endregion
+
 		public void ChangeZone(CardGroupEnum _newZone){			
 			CardGroupEnum _oldZone = CurrentGroup.GroupName;
 
@@ -509,6 +546,26 @@ namespace MagicCrow
 			PointOverlayVBO.UpdateVBO ();
 			UpdatePointsOverlaySurface ();			
 		}
+		public void Destroy(MagicStackElement causer){
+			//TODO:regenerate replace devour here
+			PutIntoGraveyard ();
+			MagicEngine.CurrentEngine.RaiseMagicEvent (new MagicEventArg (Triggers.Mode.Destroyed, this, causer));
+		}
+		public void Devour(CardInstance source){
+			PutIntoGraveyard ();
+			MagicEngine.CurrentEngine.RaiseMagicEvent (new MagicEventArg (Triggers.Mode.Devoured, this, source));
+		}
+		/// <summary>
+		/// Sacrifice card, can't be regenerated.
+		/// </summary>
+		public void Sacrificed (object causer){
+			MagicEngine.CurrentEngine.RaiseMagicEvent (new MagicEventArg (Triggers.Mode.Sacrificed, this, causer));
+			PutIntoGraveyard ();
+		}
+		public void Discard (object causer) {
+			MagicEngine.CurrentEngine.RaiseMagicEvent (new MagicEventArg (Triggers.Mode.Discarded, this, causer));
+			PutIntoGraveyard ();
+		}
         public void PutIntoGraveyard()
         {
 			while (AttachedCards.Count > 0)
@@ -542,6 +599,8 @@ namespace MagicCrow
 			PumpEffect.Clear ();
 			Counters.Clear ();
 			Damages.Clear();
+			HasCombatDamage = false;
+			HasDealtCombatDamages = false;
             Combating = false;
 			Kicked = false;
             if (BlockedCreature != null)
@@ -549,7 +608,7 @@ namespace MagicCrow
                 BlockedCreature.BlockingCreatures.Remove(this);
                 BlockedCreature = null;
             }
-            tappedWithoutEvent = false;
+            IsTappedWithoutEvent = false;
 			HasSummoningSickness = false;
 
 			if (IsAttached)				
@@ -668,13 +727,29 @@ namespace MagicCrow
             return true;
         }
        
-		//TODO: remove redundant function
+		/// <summary> Tap or untap card and raise corresponding MagicEvent </summary>
         public bool IsTapped
         {
-            get { return _isTapped; }
-        }
+			get { return _isTapped; }
+			set
+			{
+				if (value == _isTapped)
+					return;
+
+				_isTapped = value;
+
+				if (_isTapped) {
+					MagicEngine.CurrentEngine.RaiseMagicEvent(new MagicEventArg(Triggers.Mode.Taps, this));
+					Animation.StartAnimation (new FloatAnimation (this, "zAngle", -MathHelper.PiOver2, MathHelper.Pi * 0.1f));
+				} else {
+					MagicEngine.CurrentEngine.RaiseMagicEvent(new MagicEventArg(Triggers.Mode.Untaps, this));
+					Animation.StartAnimation (new FloatAnimation (this, "zAngle", 0f, MathHelper.Pi * 0.1f));
+				}
+
+			}
+		}
         /// <summary> Tap card without raising MagicEvent, usefull when card enter battelfield tapped </summary>        
-		public bool tappedWithoutEvent
+		public bool IsTappedWithoutEvent
         {
             get { return _isTapped; }
             set
@@ -690,18 +765,6 @@ namespace MagicCrow
 					Animation.StartAnimation(new FloatAnimation(this, "zAngle", 0f, MathHelper.Pi * 0.1f));
 				
             }
-        }
-        public void Tap()
-        {
-            tappedWithoutEvent = true;
-            MagicEngine.CurrentEngine.RaiseMagicEvent(new MagicEventArg(MagicEventType.TapCard, this));
-        }
-        public void TryToUntap()
-        {
-//            Effect e = Effects.Where(ef => ef.TypeOfEffect == EffectType.DoesNotUntap).LastOrDefault();
-//
-//            if (e == null)
-                tappedWithoutEvent = false;
         }
 		public void UpdatePowerAndToughness()
 		{
@@ -767,6 +830,7 @@ namespace MagicCrow
 		}
 		public bool UpdateControler()
 		{
+			Player lastControler = Controler;
 			_controler = null;
 			foreach (CardInstance ci in MagicEngine.CurrentEngine.CardsInPlayHavingEffect(EffectType.GainControl)) {
 				bool valid = false;
@@ -789,6 +853,8 @@ namespace MagicCrow
 					}						
 				}
 			}
+			if (lastControler != Controler)
+				MagicEngine.CurrentEngine.RaiseMagicEvent (new MagicEventArg (Triggers.Mode.ChangesController, this, lastControler));
 			return _controler != null;
 		}
 
@@ -999,7 +1065,6 @@ namespace MagicCrow
 				return r.ContainsOrIsEqual (m);
 		}
 		#endregion
-
 
 		#region Arrows
 		GGL.vaoMesh arrows;

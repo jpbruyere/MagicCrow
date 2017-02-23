@@ -53,41 +53,32 @@ namespace MagicCrow
 
         CardInstance _currentBlockingCreature;
         List<Damage> _damages = new List<Damage>();
+		bool hasCombatDamage;
 
 		public volatile PlayerStates CurrentState;
 		public volatile bool DeckLoaded = false;
-		public string deckPath = "Lightforce.dck";
 		public Cost ManaPool;
 		public bool Keep = false;
 		public int CardToDraw = 7;
-		public bool PhaseDone = false;
 		public int LifePointsLooseThisTurn = 0;
 		public int LifePointsGainedThisTurn = 0;
 
 		volatile int progressValue=0;
 		volatile int progressMax=0;
 		public int ProgressValue{
-			get { 
-				return progressValue; 
-			}
+			get { return progressValue; }
 			set {
 				progressValue = value;
 				NotifyValueChange ("ProgressValue", progressValue);
 			}
 		}
 		public int ProgressMax{
-			get { 
-				return progressMax; 
-			}
+			get { return progressMax; }
 			set {
 				progressMax = value;
 				NotifyValueChange ("ProgressMax", progressMax);
 			}
 		}
-		public bool ProgressBarVisible {
-			get { return MagicEngine.CurrentEngine.pp == this; }
-		}
-
 
 		public Library Library;
 		public CardGroup Hand;
@@ -305,13 +296,6 @@ namespace MagicCrow
 				return;
 			me.MagicStack.TryToHandleClick (this);
 		}
-		public void UpdateUi()
-		{
-//			if (MagicEngine.CurrentEngine.pp == this)
-//				pgBar.Visible = true;
-//			else
-//				pgBar.Visible = false;
-		}
 		void createKeepMulliganChoice()
 		{
 			msgBox = Magic.CurrentGameWin.Load ("#MagicCrow.ui.keepOrMuligan.iml") as MessageBox;
@@ -323,7 +307,6 @@ namespace MagicCrow
 			msgBox = null;
 			CurrentState = PlayerStates.Ready;
 			MagicEngine e = MagicEngine.CurrentEngine;
-			e.RaiseMagicEvent(new MagicEventArg(MagicEventType.PlayerIsReady,this));
 		}
 		void OnTakeMulligan(Object sender, EventArgs e)
 		{
@@ -406,26 +389,45 @@ namespace MagicCrow
  		public void DrawOneCard()
         {
 			if (Library.Cards.Count == 0) {
-				MagicEngine.CurrentEngine.RaiseMagicEvent (new MagicEventArg (MagicEventType.PlayerHasLost, this));
+				MagicEngine.CurrentEngine.RaiseMagicEvent (new MagicEventArg (Triggers.Mode.LosesGame, this));
 				return;
 			}
             CardInstance c = Library.TakeTopOfStack;
-            Hand.AddCard(c);
+
+			MagicEngine.CurrentEngine.RaiseMagicEvent (
+				new MagicEventArg (Triggers.Mode.Drawn, c));
+			
+			Hand.AddCard(c);
+
 			MagicEngine.CurrentEngine.RaiseMagicEvent (
 				new ChangeZoneEventArg (c,CardGroupEnum.Library,CardGroupEnum.Hand));
-        }			
+        }
+		#region IDamagable interface
+		public bool HasCombatDamage {
+			get { return hasCombatDamage; }
+			set { hasCombatDamage = value; }
+		}
 		public void AddDamages(Damage d)
 		{
+			if (d.Amount <= 0)
+				return;
+
+			MagicEngine.CurrentEngine.RaiseMagicEvent(new DamageEventArg(d));
+
 			LifePointsLooseThisTurn	+= d.Amount;
 			//test here damage prevention effects
 			LifePoints -= d.Amount;
 
-			MagicEngine.CurrentEngine.RaiseMagicEvent(new DamageEventArg(d));
+			if (d.IsCombatDamage)
+				HasCombatDamage = true;
+			
 
 			if (LifePoints < 1)
 			{
 			}
 		}
+		#endregion
+
 			
 		public virtual void Process()
         {

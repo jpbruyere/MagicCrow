@@ -1,10 +1,10 @@
 ﻿//
-//  MagicStackElement.cs
+//  TargetDefinition.cs
 //
 //  Author:
 //       Jean-Philippe Bruyère <jp.bruyere@hotmail.com>
 //
-//  Copyright (c) 2015 jp
+//  Copyright (c) 2017 jp
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -22,14 +22,13 @@ using System;
 
 namespace MagicCrow
 {
-	public abstract class MagicStackElement
+	public class TargetDefinition
 	{
-		public abstract string Title { get; }
-		public abstract string Message { get; }
-		public abstract string[] MSECostElements { get;  }
-		public abstract string[] MSEOtherCostElements { get;  }
-		public abstract Player Player { get; set;}
-		public abstract bool IsMandatory { get; }
+		public AttributGroup<Target> ValidTargets;
+
+		public TargetDefinition ()
+		{
+		}
 	}
 }
 

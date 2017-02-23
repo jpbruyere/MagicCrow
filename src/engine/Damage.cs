@@ -7,6 +7,7 @@ namespace MagicCrow
 {
     public interface IDamagable
     {
+		bool HasCombatDamage { get; set; }
         void AddDamages(Damage d);
 
     }
@@ -35,12 +36,14 @@ namespace MagicCrow
         public IDamagable Target;
         public CardInstance Source;
         public int Amount;
+		public bool IsCombatDamage;
 
-        public Damage(IDamagable _target, CardInstance _source, int _amount)
+		public Damage(IDamagable _target, CardInstance _source, int _amount, bool isCombatDamage = false)
         {
             Target = _target;
             Source = _source;
             Amount = _amount;
+			IsCombatDamage = isCombatDamage;
         }
 
         public void Deal()
@@ -51,12 +54,14 @@ namespace MagicCrow
             if (Source.HasAbility(AbilityEnum.Trample) && Target is CardInstance)
             {
                 CardInstance t = Target as CardInstance;
-                Target.AddDamages(new Damage(t,Source,t.Toughness));
+				Target.AddDamages (new Damage (t, Source, t.Toughness, IsCombatDamage));
                 Amount -= t.Toughness;
                 t.Controler.AddDamages(this);
             }else{
                 Target.AddDamages(this);
             }
+			if (IsCombatDamage && !Source.HasDealtCombatDamages)
+				Source.HasDealtCombatDamages = true;
         }
     	public override string ToString ()
 		{

@@ -27,6 +27,7 @@ namespace MagicCrow
 	{
 		public List<MagicStackElement> Choices = new List<MagicStackElement>();
 		Player _player;
+		bool isMandatory = false;
 		public MagicChoice ()
 		{
 		}
@@ -43,6 +44,9 @@ namespace MagicCrow
 		public override Player Player {
 			get { return _player; }
 			set { _player = value; }
+		}
+		public override bool IsMandatory {
+			get { return isMandatory; }
 		}
 		#endregion
 	}

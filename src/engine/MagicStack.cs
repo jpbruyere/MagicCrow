@@ -38,49 +38,23 @@ namespace MagicCrow
 		#endregion
 
 		MagicEngine engine;
-		public CardLayout SpellStackLayout = new CardLayout ();
+		//public CardLayout SpellStackLayout = new CardLayout ();
 
 		#region CTOR
 		public MagicStack (MagicEngine _engine) : base()
 		{
 			engine = _engine;
 
-			SpellStackLayout.Position = new Vector3 (0, 0, 2);//Magic.vGroupedFocusedPoint;
-			SpellStackLayout.HorizontalSpacing = 0.1f;
-			SpellStackLayout.VerticalSpacing = 0.3f;
-			SpellStackLayout.MaxHorizontalSpace = 3f;
+//			SpellStackLayout.Position = new Vector3 (0, 0, 2);//Magic.vGroupedFocusedPoint;
+//			SpellStackLayout.HorizontalSpacing = 0.1f;
+//			SpellStackLayout.VerticalSpacing = 0.3f;
+//			SpellStackLayout.MaxHorizontalSpace = 3f;
 			//SpellStackLayout.xAngle = Magic.FocusAngle;
 		}
 		#endregion
 
-		void ActionDone_MouseClick (object sender, Crow.MouseButtonEventArgs e)
-		{			
-			if (NextActionOnStack != null) {
-				NextActionOnStack.Validate ();
-			} else if (UIActionIsChoice) {
-				PopMSE ();
-			}
 
-			//MagicEngine.CurrentEngine.CancelLastActionOnStack ();
-		}
-		void onChoiceMade (object sender, SelectionChangeEventArgs e)
-		{
-			if (e.NewValue == null)
-				return;
-			PopMSE ();
-			PushOnStack (e.NewValue as MagicStackElement);
-		}
-
-		#region Stack managment
-		public MagicAction NextActionOnStack {
-			get { return this.Count == 0 ? null :
-				this.Peek () is MagicAction ?
-				this.Peek () as MagicAction : null; }
-		}
-		public List<MagicStackElement> Choices {
-			get { return UIActionIsChoice ? 
-				(this.Peek() as MagicChoice).Choices:new List<MagicStackElement>(); }
-		}
+		#region Interface
 		public bool UIActionIsChoice{
 			get { 
 				if (this.Count == 0)
@@ -91,14 +65,12 @@ namespace MagicCrow
 				return mse is MagicChoice;
 			}
 		}
-
 		public bool UIPlayerActionIsOnStack {
 			get { 
 				return this.Count == 0 ? false : 
 					((this.Peek ()).Player == engine.ip);
 			}
 		}
-
 		public string UIPlayerTitle {
 			get { return UIPlayerActionIsOnStack ? 
 				this.Peek().Title	: "";
@@ -109,28 +81,10 @@ namespace MagicCrow
 				this.Peek().Message	: "";
 			}
 		}
-		public String[] CostElements
-		{ get{ return UIPlayerActionIsOnStack ? this.Peek ().MSECostElements : null; }}
-		public bool CostIsNotNull
-		{ get { return CostElements != null; }}
-		public String[] OtherCostElements
-		{ get{ return UIPlayerActionIsOnStack ? this.Peek ().MSEOtherCostElements : null; }}
-		public bool MessageIsNotNull
-		{ get { return !string.IsNullOrEmpty(UIPlayerMessage); }}
-
-		public void PushOnStack (MagicStackElement s)
-		{			
-			this.Push (s);
-			notifyStackElementChange ();
-			Magic.CurrentGameWin.NotifyValueChanged ("MagicStack", this.ToList());
-		}
-		public MagicStackElement PopMSE()
-		{
-			MagicStackElement tmp = this.Pop ();
-			notifyStackElementChange ();
-			Magic.CurrentGameWin.NotifyValueChanged ("MagicStack", this.ToList());
-			return tmp;
-		}
+		public String[] CostElements { get{ return UIPlayerActionIsOnStack ? this.Peek ().MSECostElements : null; }}
+		public bool CostIsNotNull { get { return CostElements != null; }}
+		public String[] OtherCostElements { get{ return UIPlayerActionIsOnStack ? this.Peek ().MSEOtherCostElements : null; }}
+		public bool MessageIsNotNull { get { return !string.IsNullOrEmpty(UIPlayerMessage); }}
 
 		void notifyStackElementChange(){
 			bool uipaios = UIPlayerActionIsOnStack;
@@ -147,197 +101,164 @@ namespace MagicCrow
 			if (UIActionIsChoice)
 				NotifyValueChanged ("Choices", Choices);
 		}
-
-		//TODO:should be changed...
-		public void ClearIncompleteActions()
-		{
-			while (this.Count > 0) {
-				if (Peek () is Damage)
-					return;
-				//TODO: check if choice may be canceled
-				if (Peek () is MagicChoice) {
-					PopMSE ();
-					return;
-				}
-				if ((Peek () as MagicAction).IsComplete)
-					break;
-				PopMSE ();
+		void Done_MouseClick (object sender, Crow.MouseButtonEventArgs e)
+		{			
+			if (NextActionOnStack != null) {
+				NextActionOnStack.Validate ();
+			} else if (UIActionIsChoice) {
+				PopMagicStackElement ();
 			}
+
+			//MagicEngine.CurrentEngine.CancelLastActionOnStack ();
 		}
-		/// <summary>
-		/// Cancel incomplete action on stack before doing anything else
-		/// </summary>
-		/// <returns>True if cancelation succed or if nothing has to be canceled, false otherwise</returns>
-		public bool CancelLastActionOnStack()
+		void onChoiceMade (object sender, SelectionChangeEventArgs e)
 		{
-			MagicAction ma = NextActionOnStack;
-			if (ma == null)
-				return true;
-			if (ma.CardSource.Controler != engine.pp) {
-				Debug.Print ("Nothing to cancel");
-				return true;
-			}
-			if (ma.IsComplete)
-				Debug.Print ("Canceling completed action");
-			if (ma.IsMandatory) {
-				Debug.Print ("Unable to cancel mandatory action");
-				return false;
-			}
-
-			PopMSE ();
-			return true;
+			if (e.NewValue == null)
+				return;
+			PopMagicStackElement ();
+			PushOnStack (e.NewValue as MagicStackElement);
 		}
+		#endregion
 
-		public void ResolveStack ()
+		#region Stack managment
+		public MagicAction NextActionOnStack {
+			get { return this.Count == 0 ? null : this.Peek () as MagicAction; }
+		}
+		public List<MagicStackElement> Choices {
+			get { return UIActionIsChoice ? 
+				(this.Peek() as MagicChoice).Choices:new List<MagicStackElement>(); }
+		}			
+		public void PushOnStack (MagicStackElement s)
+		{			
+			this.Push (s);
+			notifyStackElementChange ();
+			Magic.CurrentGameWin.NotifyValueChanged ("MagicStack", this.ToList());
+		}
+		public MagicStackElement PopMagicStackElement()
+		{
+			MagicStackElement tmp = this.Pop ();
+			notifyStackElementChange ();
+			Magic.CurrentGameWin.NotifyValueChanged ("MagicStack", this.ToList());
+			return tmp;
+		}
+		public void Resolve ()
 		{
 			while (Count > 0) {
+				if (this.Peek () is Damage)
+					Debugger.Break ();
+				
 				if (Peek () is MagicAction) {
 
 					if (!(Peek () as MagicAction).IsComplete)
-						break;
+						Debugger.Break ();
 
-					MagicAction ma = PopMSE() as MagicAction;
-
-					//UpdateStackLayouting ();
-
+					MagicAction ma = PopMagicStackElement() as MagicAction;
 					ma.Resolve ();
-
-					continue;
-				}
-
- 				if (this.Peek () is Damage) {
-					(PopMSE() as Damage).Deal ();
-					continue;
 				}
 			}
 		}
 		/// <summary>
 		/// Check completeness of last action on stack.
 		/// </summary>
-		public void CheckLastActionOnStack ()
-		{
-			if (this.Count == 0)
-				return;
+//		public void Process ()
+//		{
+//			if (this.Count == 0)
+//				return;
+//
+//			MagicAction ma = this.Peek () as MagicAction;
+//
+//			if (ma == null)
+//				return;
+//
+//			if (ma.CardSource != null){
+//				if (ma.CardSource.Controler != engine.pp)
+//					return;
+//			}
+//			//Magic.CurrentGameWin.CursorVisible = true;
+//			if (!ma.IsComplete) {
+//				if (ma.remainingCost == CostTypes.Tap) {
+//					ma.remainingCost = null;
+//					ma.CardSource.IsTapped = true;
+//				} else if ((engine.pp.AvailableManaOnTable + engine.pp.ManaPool) < ma.RemainingCost?.ManaCost) {
+//					Magic.AddLog ("Not enough mana available");
+//					CancelLastActionOnStack ();
+//					return;
+//				} else if (engine.pp.ManaPool != null && ma.RemainingCost?.ManaCost != null) {
+//					string lastRemCost = ma.RemainingCost.ToString ();
+//					ma.PayCost (ref engine.pp.ManaPool);
+//					bool skipUpdateUI = false;
+//					if (ma.RemainingCost != null) {
+//						if (string.Equals (ma.RemainingCost.ToString (), lastRemCost, StringComparison.Ordinal))
+//							skipUpdateUI = true;
+//					}
+//					if (!skipUpdateUI){
+//						engine.pp.NotifyValueChange ("ManaPoolElements", engine.pp.ManaPoolElements);
+//						notifyStackElementChange ();
+//					}
+//				}
+//
+//				//				if (ma.IsComplete && ma.GoesOnStack)
+//				//					GivePriorityToNextPlayer ();				
+//
+//			}
+//			if (ma.IsComplete){
+//				if (ma.GoesOnStack) {
+//					//should show spell to player...
+//					//UpdateStackLayouting();
+//					engine.GivePriorityToNextPlayer ();				
+//				} else {
+//					PopMagicStackElement ();
+//					ma.Resolve ();
+//				}
+//				return;
+//			}
+//			//			AbilityActivation aa = ma as AbilityActivation;
+//			//			//mana doest go on stack
+//			//			if (aa != null){
+//			//				if (aa.Source.AbilityType == AbilityEnum.Mana) {
+//			//					MagicEvent (new AbilityEventArg (aa.Source, aa.CardSource));				
+//			//					MagicStack.Pop;
+//			//					return;
+//			//				}
+//			//			}
+//		}
 
-			MagicAction ma = this.Peek () as MagicAction;
+		public bool TryToHandleClick (object target){
+			MagicStackElement mse = Peek ();
+			if (mse.Player != engine.pp)
+				Debugger.Break ();
 
-			if (ma == null)
-				return;
-
-			if (ma.CardSource != null){
-				if (ma.CardSource.Controler != engine.pp)
-					return;
-			}
-			//Magic.CurrentGameWin.CursorVisible = true;
-			if (!ma.IsComplete) {
-				if (ma.remainingCost == CostTypes.Tap) {
-					ma.remainingCost = null;
-					ma.CardSource.Tap ();
-				} else if ((engine.pp.AvailableManaOnTable + engine.pp.ManaPool) < ma.RemainingCost?.ManaCost) {
-					Magic.AddLog ("Not enough mana available");
-					CancelLastActionOnStack ();
-					return;
-				} else if (engine.pp.ManaPool != null && ma.RemainingCost?.ManaCost != null) {
-					string lastRemCost = ma.RemainingCost.ToString ();
-					ma.PayCost (ref engine.pp.ManaPool);
-					bool skipUpdateUI = false;
-					if (ma.RemainingCost != null) {
-						if (string.Equals (ma.RemainingCost.ToString (), lastRemCost, StringComparison.Ordinal))
-							skipUpdateUI = true;
-					}
-					if (!skipUpdateUI){
-						engine.pp.NotifyValueChange ("ManaPoolElements", engine.pp.ManaPoolElements);
-						notifyStackElementChange ();
-					}
-				}
-
-				//				if (ma.IsComplete && ma.GoesOnStack)
-				//					GivePriorityToNextPlayer ();				
-
-			}
-			if (ma.IsComplete){
-				if (ma.GoesOnStack) {
-					//should show spell to player...
-					//UpdateStackLayouting();
-					engine.GivePriorityToNextPlayer ();				
-				} else {
-					PopMSE ();
-					ma.Resolve ();
-				}
-				return;
-			}
-
-
-			engine.pp.UpdateUi ();
-
-			//			AbilityActivation aa = ma as AbilityActivation;
-			//			//mana doest go on stack
-			//			if (aa != null){
-			//				if (aa.Source.AbilityType == AbilityEnum.Mana) {
-			//					MagicEvent (new AbilityEventArg (aa.Source, aa.CardSource));				
-			//					MagicStack.Pop;
-			//					return;
-			//				}
-			//			}
-		}
-		public bool TryToHandleClick(Object target)
-		{
-			//Magic.CurrentGameWin.CursorVisible = true;
-			MagicAction ma = NextActionOnStack;
-			if (ma != null) {
-				if (!ma.IsComplete) {
-					if (ma.TryToAddTarget (target)) {
-						notifyStackElementChange ();
-						return true;
-					}
-				}
-			}
-			if (!(target is CardInstance))
-				return false;
-			if (TryToAssignTargetForDamage(target as CardInstance))
-			{
-				notifyStackElementChange ();
-				CheckStackForUnasignedDamage();//TODO:this do nothing...
+			if (mse is Damage) {				
+				Damage d = mse as Damage;
+				//TODO:is target valid?
+				d.Target = target as IDamagable;
+				PopMagicStackElement ();
+				d.Deal ();
 				return true;
-			}			
-			return false;
-		}
-		/// <returns>true if all damages are assigned</returns>
-		public bool CheckStackForUnasignedDamage ()
-		{
-			foreach (Damage d in this.ToArray().OfType<Damage>())
-			{
-				if (d.Target == null)
-				{
-					Magic.AddLog(d.Amount + " damage from " + d.Source.Model.Name + " to assign");                    
-					return false;
-				}
 			}
-			return true;
-		}
-		public bool TryToAssignTargetForDamage (CardInstance c)
-		{
-			foreach (Damage d in this.ToArray().OfType<Damage>()) {
-				if (d.Target == null) {
-					d.Target = c;
-					//MagicCrow.pCurrentSpell.Visible = false;
-					return true;
-				}
-			}
-			return false;
+
+			if (mse is MagicChoice)				
+				return false;
+
+			MagicAction ma = mse as MagicAction;
+
+			if (ma.IsComplete)
+				Debugger.Break ();
+			
+			return ma.TryToAddTarget (target);
 		}
 
-		public void UpdateStackLayouting()
-		{
-			SpellStackLayout.Cards.Clear ();
-			foreach (MagicAction ma in this.OfType<MagicAction>()) {
-				if (ma is Spell)
-					SpellStackLayout.Cards.Add ((ma as Spell).CardSource);
-				else if (ma is AbilityActivation)
-					SpellStackLayout.Cards.Add (new CardInstance(ma));
-			}
-			SpellStackLayout.UpdateLayout ();			
-		}
+//		public void UpdateStackLayouting()
+//		{
+//			SpellStackLayout.Cards.Clear ();
+//			foreach (MagicAction ma in this.OfType<MagicAction>()) {
+//				if (ma is Spell)
+//					SpellStackLayout.Cards.Add ((ma as Spell).CardSource);
+//				else if (ma is AbilityActivation)
+//					SpellStackLayout.Cards.Add (new CardInstance(ma));
+//			}
+//			SpellStackLayout.UpdateLayout ();			
+//		}
 		#endregion
 	}
 }

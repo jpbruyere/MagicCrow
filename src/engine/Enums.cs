@@ -21,6 +21,7 @@ namespace MagicCrow
 
 	public enum MagicEventType
 	{
+		Attached,
 		PlayerIsReady,
 		PlayerHasLost,
 		Unset,

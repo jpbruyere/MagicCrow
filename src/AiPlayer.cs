@@ -28,7 +28,7 @@ namespace MagicCrow
 				return;
 			case PlayerStates.PlayDrawChoice:
 				//chose to play first
-				e.currentPlayerIndex = e.getPlayerIndex (this);
+				e.CurPlayerIdx = e.getPlayerIndex (this);
 				CurrentState = PlayerStates.InitialDraw;
 				return;
 			case PlayerStates.InitialDraw:				
@@ -38,7 +38,6 @@ namespace MagicCrow
 			case PlayerStates.KeepMuliganChoice:
 				//choose to keep
 				CurrentState = PlayerStates.Ready;
-				e.RaiseMagicEvent(new MagicEventArg(MagicEventType.PlayerIsReady,this));
 				return;
 			}
 
@@ -57,13 +56,13 @@ namespace MagicCrow
 				switch (e.CurrentPhase)
 				{
 				case GamePhases.Untap:
-					PhaseDone = true;
+					MagicEngine.CurrentEngine.Validate ();
 					break;
 				case GamePhases.Upkeep:
-					PhaseDone = true;
+					MagicEngine.CurrentEngine.Validate ();
 					break;
 				case GamePhases.Draw:
-					PhaseDone = true;
+					MagicEngine.CurrentEngine.Validate ();
 					break;
 				case GamePhases.Main1:
 				case GamePhases.Main2:
@@ -71,41 +70,37 @@ namespace MagicCrow
 						if (AITryToPlayLand ())
 							break;
 					if (!CastAvailableAndAllowedCreature())
-						PhaseDone = true;
+						MagicEngine.CurrentEngine.Validate ();
 					break;
 				case GamePhases.BeforeCombat:
-					PhaseDone = true;
+					MagicEngine.CurrentEngine.Validate ();
 					break;
 				case GamePhases.DeclareAttacker:
 					AITryToAttack ();
-					PhaseDone = true;
+					MagicEngine.CurrentEngine.Validate ();
 					break;
 				case GamePhases.DeclareBlocker:
-					PhaseDone = true;
+					MagicEngine.CurrentEngine.Validate ();
 					break;
 				case GamePhases.FirstStrikeDame:
-					PhaseDone = true;
+					MagicEngine.CurrentEngine.Validate ();
 					break;
 				case GamePhases.CombatDamage:
-					PhaseDone = true;
+					MagicEngine.CurrentEngine.Validate ();
 					break;
 				case GamePhases.EndOfCombat:
-					PhaseDone = true;
+					MagicEngine.CurrentEngine.Validate ();
 					break;
 				case GamePhases.EndOfTurn:
-					PhaseDone = true;
+					MagicEngine.CurrentEngine.Validate ();
 					break;
 				case GamePhases.CleanUp:
-					PhaseDone = true;
+					MagicEngine.CurrentEngine.Validate ();
 					break;
 				}
 			}
-			else
-			{
-				if (e.pp == this) {
-					Magic.AddLog ("AI just had priority");
-					e.GivePriorityToNextPlayer ();
-				}
+			else if (e.pp == this) {
+				Magic.AddLog ("AI just had priority");
 //				switch (e.CurrentPhase)
 //				{
 //				case GamePhases.Untap:
@@ -148,6 +143,7 @@ namespace MagicCrow
 //					PhaseDone = true;
 //					break;
 //				}
+				MagicEngine.CurrentEngine.Validate ();
 			}		
 		}
 

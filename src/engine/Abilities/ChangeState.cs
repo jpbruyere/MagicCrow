@@ -1,10 +1,10 @@
 ﻿//
-//  MagicStackElement.cs
+//  Ability.cs
 //
 //  Author:
 //       Jean-Philippe Bruyère <jp.bruyere@hotmail.com>
 //
-//  Copyright (c) 2015 jp
+//  Copyright (c) 2017 jp
 //
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
@@ -20,16 +20,13 @@
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using System;
 
-namespace MagicCrow
+namespace MagicCrow.Abilities
 {
-	public abstract class MagicStackElement
+	public class ChangeState : Ability
 	{
-		public abstract string Title { get; }
-		public abstract string Message { get; }
-		public abstract string[] MSECostElements { get;  }
-		public abstract string[] MSEOtherCostElements { get;  }
-		public abstract Player Player { get; set;}
-		public abstract bool IsMandatory { get; }
+		public ChangeState ()
+		{
+		}
 	}
 }
 

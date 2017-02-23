@@ -25,7 +25,7 @@
 				<VerticalStack Margin="10" Name="ItemsContainer"/>
 			</Template>
 		</ListBox>-->
-		<Button HorizontalAlignment="Right"  Caption="Done" MouseClick="ActionDone_MouseClick" Height="Fit" Margin="5"/>
+		<Button HorizontalAlignment="Right"  Caption="Done" MouseClick="Done_MouseClick" Height="Fit" Margin="5"/>
 	</VerticalStack>
 </Window>
 

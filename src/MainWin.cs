@@ -454,7 +454,7 @@ namespace MagicCrow
 			tmp.Controler.Hand.AddCard(tmp,true);
 		}
 		void onCancelLastClick (object sender, MouseButtonEventArgs e){
-			engine.MagicStack.PopMSE ();
+			engine.MagicStack.PopMagicStackElement ();
 		}
 		void onPhaseClick (object sender, MouseButtonEventArgs e){			
 			Border g = sender as Border;
@@ -639,9 +639,9 @@ namespace MagicCrow
 			Players [1].LoadDeckCards ();
 
 			engine = new MagicEngine (Players);
-			MagicEngine.MagicEvent += MagicEngine_MagicEvent;
+			engine.MagicEvent += MagicEngine_MagicEvent;
 
-			engine.currentPlayerIndex = engine.interfacePlayer;
+			engine.CurPlayerIdx = engine.interfacePlayer;
 
 			mstack = Load ("#MagicCrow.ui.MagicStack.iml");				
 			AddWidget(mstack);
@@ -670,39 +670,27 @@ namespace MagicCrow
 			loadWindow ("#MagicCrow.ui.mainMenu.iml");
 		}
 
-		void MagicEngine_MagicEvent (MagicEventArg arg)
+		void MagicEngine_MagicEvent (object sender, MagicEventArg arg)
 		{
-			Border b;
-			switch (arg.Type)
-			{
-			case MagicEventType.PlayerHasLost:
-				closeCurrentGame ();
-				break;
-			case MagicEventType.Unset:
-				break;
-			case MagicEventType.BeginPhase:
-				b = phasePannel.FindByName 
-					((arg as PhaseEventArg).Phase.ToString ()) as Border;
-				if (b!=null)
-					b.Foreground = Color.White;				
-				break;
-			case MagicEventType.EndPhase:
-				b = phasePannel.FindByName 
-					((arg as PhaseEventArg).Phase.ToString ()) as Border;
-				if (b!=null)
-					b.Foreground = Color.Transparent;
-				break;
-			case MagicEventType.PlayLand:
-				break;
-			case MagicEventType.CastSpell:
-				break;
-			case MagicEventType.TapCard:
-				break;
-			case MagicEventType.ChangeZone:
-				break;
-			default:
-				break;
-			}
+//			Border b;
+//			switch (arg.Type)
+//			{
+//			case Triggers.Mode.LosesGame:
+//				//closeCurrentGame ();
+//				break;
+//			case Triggers.Mode.Phase:
+//				b = phasePannel.FindByName 
+//					((arg as PhaseEventArg).Phase.ToString ()) as Border;
+//				if (b!=null)
+//					b.Foreground = Color.White;				
+//				b = phasePannel.FindByName 
+//					((arg as PhaseEventArg).Phase.ToString ()) as Border;
+//				if (b!=null)
+//					b.Foreground = Color.Transparent;
+//				break;
+//			default:
+//				break;
+//			}
 		}
 
 
@@ -799,7 +787,7 @@ namespace MagicCrow
 		{
 			switch (e.Key) {
 			case OpenTK.Input.Key.KeypadEnter:
-				engine.ip.PhaseDone = true;
+				engine.Validate ();
 //				if (engine.pp == engine.ip && engine.cp != engine.pp)
 //					engine.GivePriorityToNextPlayer ();
 				break;
@@ -870,12 +858,12 @@ namespace MagicCrow
 			case OpenTK.Input.Key.U:
 				if (e.Control){
 					foreach (CardInstance ci in Players[0].Deck.Cards.Where(c=>c.HasType(CardTypes.Land)&&c.CurrentGroup.GroupName == CardGroupEnum.InPlay)){
-						ci.tappedWithoutEvent = false;
+						ci.IsTappedWithoutEvent = false;
 					}
 				}
 				if (CardInstance.selectedCard == null)
 					return;
-				CardInstance.selectedCard.tappedWithoutEvent = false;
+				CardInstance.selectedCard.IsTappedWithoutEvent = false;
 				break;			
 			case OpenTK.Input.Key.Delete:
 				if (CardInstance.selectedCard == null)

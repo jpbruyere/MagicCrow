@@ -67,16 +67,16 @@ namespace MagicCrow
 			switch (Type) {
 			case MagicEventType.ChangeZone:
 				
-				if (!targetIsValid (arg.Source, triggerSource))
+				if (!targetIsValid (arg.source, triggerSource))
 					return false;
 				
 				ChangeZoneEventArg czea = arg as ChangeZoneEventArg;
 				if ((czea.Origine == Origine || Origine == CardGroupEnum.Any)
 				    && (czea.Destination == Destination || Destination == CardGroupEnum.Any)) {
 					if (InhibStacking)
-						MagicEngine.CurrentEngine.MagicStack.PushOnStack (new AbilityActivation (arg.Source, Exec) { GoesOnStack = false });
+						MagicEngine.CurrentEngine.MagicStack.PushOnStack (new AbilityActivation (arg.source, Exec) { GoesOnStack = false });
 					else
-						MagicEngine.CurrentEngine.MagicStack.PushOnStack (new AbilityActivation (arg.Source, Exec));
+						MagicEngine.CurrentEngine.MagicStack.PushOnStack (new AbilityActivation (arg.source, Exec));
 				}else
 					return false;
 				return true;
@@ -89,11 +89,11 @@ namespace MagicCrow
 				return true;						
 			default:
 				Debug.WriteLine ("default trigger handler: " + this.ToString ());
-				if (targetIsValid (arg.Source, triggerSource)) {
+				if (targetIsValid (arg.source, triggerSource)) {
 					if (InhibStacking)
-						MagicEngine.CurrentEngine.MagicStack.PushOnStack (new AbilityActivation (arg.Source, Exec) { GoesOnStack = false });
+						MagicEngine.CurrentEngine.MagicStack.PushOnStack (new AbilityActivation (arg.source, Exec) { GoesOnStack = false });
 					else
-						MagicEngine.CurrentEngine.MagicStack.PushOnStack (new AbilityActivation (arg.Source, Exec));
+						MagicEngine.CurrentEngine.MagicStack.PushOnStack (new AbilityActivation (arg.source, Exec));
 				}else
 					return false;
 				return true;

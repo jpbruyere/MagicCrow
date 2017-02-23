@@ -73,6 +73,9 @@
     <Folder Include="images\expansions\" />
     <Folder Include="shaders\" />
     <Folder Include="images\phaseIcons\" />
+    <Folder Include="src\engine\Abilities\" />
+    <Folder Include="src\engine\Triggers\" />
+    <Folder Include="src\engine\Triggers\Events\" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="lib\Crow\Tests\CrowWindow.cs">
@@ -108,7 +111,6 @@
     <Compile Include="src\engine\MagicAction.cs" />
     <Compile Include="src\engine\MagicChoice.cs" />
     <Compile Include="src\engine\MagicEngine.cs" />
-    <Compile Include="src\engine\MagicEventArgs.cs" />
     <Compile Include="src\engine\MagicStack.cs" />
     <Compile Include="src\engine\MagicStackElement.cs" />
     <Compile Include="src\engine\Mana.cs" />
@@ -152,6 +154,27 @@
     <Compile Include="src\engine\Effects\AddOrRemoveCounter.cs" />
     <Compile Include="src\CardView.cs" />
     <Compile Include="src\CardDataGrid.cs" />
+    <Compile Include="src\engine\Abilities\Ability.cs" />
+    <Compile Include="src\engine\Abilities\AlterLife.cs" />
+    <Compile Include="src\engine\Abilities\Animate.cs" />
+    <Compile Include="src\engine\Abilities\Attach.cs" />
+    <Compile Include="src\engine\Abilities\Bond.cs" />
+    <Compile Include="src\engine\Abilities\ChangeState.cs" />
+    <Compile Include="src\engine\Abilities\ChangeZoom.cs" />
+    <Compile Include="src\engine\Abilities\Charm.cs" />
+    <Compile Include="src\engine\Abilities\Choose.cs" />
+    <Compile Include="src\engine\Abilities\Clash.cs" />
+    <Compile Include="src\engine\Abilities\Mana.cs" />
+    <Compile Include="src\engine\Abilities\CleanUp.cs" />
+    <Compile Include="src\engine\TargetDefinition.cs" />
+    <Compile Include="src\engine\Triggers\Trigger.cs" />
+    <Compile Include="src\engine\Triggers\Events\ChangeZoneEventArg.cs" />
+    <Compile Include="src\engine\Triggers\Events\MagicEventArg.cs" />
+    <Compile Include="src\engine\Triggers\Events\CastEventArg.cs" />
+    <Compile Include="src\engine\Triggers\Events\DamageEventArg.cs" />
+    <Compile Include="src\engine\Triggers\Events\PhaseEventArg.cs" />
+    <Compile Include="src\engine\Triggers\Events\ActivatedAbEventArg.cs" />
+    <Compile Include="src\engine\Triggers\Events\LifeEventArg.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="ui\mainMenu.iml" />

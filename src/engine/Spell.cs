@@ -9,10 +9,15 @@ namespace MagicCrow
 	public class Spell : MagicAction
     {
 		#region CTOR
-		public Spell() : base(null){}
 		public Spell(CardInstance _cardInstance) : base(_cardInstance)
 		{            
 			_cardInstance.BindedAction = this;
+
+			List<AbilityActivation> tmpAA = new List<AbilityActivation> ();
+			foreach (Abilities.Ability a in CardSource.Model.Abilities.Where (sma => sma.Category == AbilityCategory.Spell).ToArray()) {
+				tmpAA.Add (new AbilityActivation (CardSource, a));
+			} 
+			spellAbilities = tmpAA.ToArray ();
 
 			if (_cardInstance.Model.Cost != null) {
 				remainingCost = _cardInstance.Model.Cost.Clone ();
@@ -27,7 +32,7 @@ namespace MagicCrow
 			}
 
 			if (IsComplete && GoesOnStack)
-				MagicEngine.CurrentEngine.GivePriorityToNextPlayer ();
+				MagicEngine.CurrentEngine.Validate ();
 		}
 		#endregion
         
@@ -37,70 +42,40 @@ namespace MagicCrow
 		}
 		public override string Message {
 			get {
-				return currentAbilityActivation == null ? "" :
-					currentAbilityActivation.NextMessage ();
+				return CurrentAbility == null ? "Cast " + CardSource.Model.Name :
+					CurrentAbility.NextMessage ();
 			}
 		}
+		public override bool IsMandatory {
+			get { return false;	}
+		}
+
 		#endregion
 
-		List<AbilityActivation> spellAbilities = new List<AbilityActivation>();
-		AbilityActivation currentAbilityActivation = null;
-		public MagicAction CurrentAbility {
-			get {
-				if (currentAbilityActivation == null)
-					currentAbilityActivation = NextAbilityToProcess;
-				while (currentAbilityActivation != null) {
-					if (currentAbilityActivation.IsComplete) {
-						spellAbilities.Add (currentAbilityActivation);
-						currentAbilityActivation = null;
-					} else
-						return currentAbilityActivation;
-					currentAbilityActivation = NextAbilityToProcess;
-				}		
-				return null;
+		int ptrSpellAbilities;
+		AbilityActivation[] spellAbilities;
+
+		public AbilityActivation CurrentAbility {
+			get { return ptrSpellAbilities < spellAbilities.Length ?
+					spellAbilities [ptrSpellAbilities] : null;
 			}
-		}
-
-		public AbilityActivation NextAbilityToProcess
-		{
-			get {
-				//already done activation
-				IEnumerable<Ability> abs = spellAbilities.Select (saa => saa.Source);
-
-				//add kicker if base cost is not paid to exclude list
-				//it will be processed only when base cost is paid
-				if (remainingCost != null)
-					abs = abs.Concat (CardSource.Model.Abilities.Where (ema => ema.AbilityType == AbilityEnum.Kicker));				
-				
-				Ability a =
-					CardSource.Model.Abilities.Where (
-						sma => sma.Category == AbilityCategory.Spell &&
-						!abs.Contains (sma)
-					).FirstOrDefault();
-
-				return a == null ? null :
-					new AbilityActivation (CardSource, a);
-			}
-		}
+		}			
 
 
 		#region MagicAction implementation
 		public override Cost RemainingCost {
-			get {
-				return currentAbilityActivation == null ? remainingCost : currentAbilityActivation.RemainingCost;
-			}
+			get { return CurrentAbility?.RemainingCost; }
 			set {
-				if (currentAbilityActivation == null)
+				if (CurrentAbility == null)
 					remainingCost = value;
 				else
-					currentAbilityActivation.RemainingCost = value;
+					CurrentAbility.RemainingCost = value;
 			}
 		}
 		public override bool IsComplete
 		{			
 			get {
-				return (CurrentAbility == null) ?
-					base.IsComplete : CurrentAbility.IsComplete;
+				return base.IsComplete & CurrentAbility == null;
 			}
 		}
 		public override int RequiredTargetCount
@@ -136,68 +111,43 @@ namespace MagicCrow
 				return;
 			}
 
-			foreach (AbilityActivation aa in spellAbilities.Where(sa => sa.IsComplete)) {
-				aa.Resolve ();
-			}
+			foreach (AbilityActivation aa in spellAbilities)
+				aa.Resolve ();			
 
 			//sumoning sickness
-			if (CardSource.HasType (CardTypes.Creature) &&
-				!CardSource.HasAbility (AbilityEnum.Haste))
+			if (CardSource.HasType (CardTypes.Creature) && !CardSource.HasAbility (AbilityEnum.Haste))
 				CardSource.HasSummoningSickness = true;
 
 			CardGroupEnum dest = CardGroupEnum.InPlay;
 
-			if (CardSource.HasType (CardTypes.Instant) ||
-				CardSource.HasType (CardTypes.Sorcery))
+			if (CardSource.HasType (CardTypes.Instant) || CardSource.HasType (CardTypes.Sorcery))
 				dest = CardGroupEnum.Graveyard;
 
 			CardSource.ChangeZone (dest);
 
 			MagicEngine.CurrentEngine.RaiseMagicEvent (new SpellEventArg (this));
-			//MagicEngine.CurrentEngine.UpdateOverlays ();
 		}			
 		public override void Validate ()
 		{
-			if (currentAbilityActivation == null){
-				MagicEngine.CurrentEngine.MagicStack.CancelLastActionOnStack ();
-				return;//maybe cancel spell if not completed
-			}
-			//cancel spell if mandatory ability activation is canceled
-			if (currentAbilityActivation.IsMandatory){
-				MagicEngine.CurrentEngine.MagicStack.CancelLastActionOnStack ();
-				return;//maybe cancel spell if not completed
-			}
+			if (IsComplete)
+				return;
 
-			currentAbilityActivation.Validate ();
+			CurrentAbility.Validate ();
 
-			spellAbilities.Add (currentAbilityActivation);
-			currentAbilityActivation = null;
+			if (CurrentAbility.IsComplete)
+				ptrSpellAbilities++;			
 		}
-		public override bool IsMandatory {
-			get {
-				return false;
-			}
-		}
-
 		public override bool TryToAddTarget (object c)
 		{
 			if (CurrentAbility == null)
-				return false;
-					
-			if (CurrentAbility.TryToAddTarget(c))
-			{				
-				//trick to force update of current ability
-				//should simplify currentAbilityActivation update
-				MagicAction tmp = CurrentAbility;
-				return true;
-			}
-			return false;
+				return false;					
+			return CurrentAbility.TryToAddTarget (c);
 		}
 
 		public override string NextMessage ()
 		{
-			return currentAbilityActivation == null ? "" :
-				currentAbilityActivation.NextMessage ();
+			return CurrentAbility == null ? "" :
+				CurrentAbility.NextMessage ();
 		}
 		#endregion
 

@@ -97,10 +97,10 @@ namespace MagicCrow.Effects
 				(_target as MagicAction).IsCountered = true;
 				break;
 			case EffectType.Destroy:
-				cardTarget.PutIntoGraveyard ();
+				cardTarget.Destroy ();
 				break;
 			case EffectType.Tap:
-				cardTarget.tappedWithoutEvent = true;
+				cardTarget.IsTappedWithoutEvent = true;
 				break;
 			case EffectType.DoesNotUntap:
 				break;			
@@ -124,9 +124,9 @@ namespace MagicCrow.Effects
 				cardTarget.Reset ();
 				cardTarget.ChangeZone ((this as ChangeZoneEffect).Destination);
 				if ((this as ChangeZoneEffect).Tapped)
-					cardTarget.tappedWithoutEvent = true;
+					cardTarget.IsTappedWithoutEvent = true;
 				else
-					cardTarget.tappedWithoutEvent = false;
+					cardTarget.IsTappedWithoutEvent = false;
 				break;
 			case EffectType.Draw:
 				Animation.DelayMs = 300;
@@ -212,9 +212,9 @@ namespace MagicCrow.Effects
 					cc.Reset ();
 					cc.ChangeZone ((this as ChangeZoneEffect).Destination);
 					if ((this as ChangeZoneEffect).Tapped)
-						cc.tappedWithoutEvent = true;
+						cc.IsTappedWithoutEvent = true;
 					else
-						cc.tappedWithoutEvent = false;
+						cc.IsTappedWithoutEvent = false;
 				}
 				orig.UpdateLayout ();
 				cardTarget.Controler.allGroups.Where (ag => ag.GroupName == (this as ChangeZoneEffect).Destination).FirstOrDefault ().UpdateLayout ();

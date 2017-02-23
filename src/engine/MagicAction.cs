@@ -37,31 +37,7 @@ namespace MagicCrow
 		}
 		#endregion
 
-		#region implemented abstract members of MagicStackElement
-		public override string[] MSECostElements {
-			get{
-				if (RemainingCost == null)
-					return null;
-				string tmp = RemainingCost.ToString ();
-				return tmp.Split(' ').Where(cc => cc.Length < 3).ToArray();
-			}
-		}
-		public override string[] MSEOtherCostElements {
-			get {
-				if (RemainingCost == null)
-					return null;
-				string tmp = RemainingCost.ToString ();
-				return tmp.Split(' ').Where(cc => cc.Length > 3).ToArray();			}
-		}
 		Player _sourcePlayer = null;
-		public override Player Player{
-			get { return _sourcePlayer == null ? 
-				CardSource == null ? null : CardSource.Controler
-					: _sourcePlayer; 
-			}
-			set { _sourcePlayer = value; }
-		}
-		#endregion
 
 		public bool GoesOnStack = true;
 		public bool IsCountered = false;
@@ -79,12 +55,35 @@ namespace MagicCrow
 		public virtual bool IsComplete {
 			get { return Cost.IsNullOrCountIsZero(remainingCost); }
 		}
-
 		public virtual void PayCost(ref Cost _amount)
 		{
 			RemainingCost = RemainingCost.Pay (ref _amount);
 		}
 
+		#region implemented abstract members of MagicStackElement
+		public override string[] MSECostElements {
+			get{
+				if (RemainingCost == null)
+					return null;
+				string tmp = RemainingCost.ToString ();
+				return tmp.Split(' ').Where(cc => cc.Length < 3).ToArray();
+			}
+		}
+		public override string[] MSEOtherCostElements {
+			get {
+				if (RemainingCost == null)
+					return null;
+				string tmp = RemainingCost.ToString ();
+				return tmp.Split(' ').Where(cc => cc.Length > 3).ToArray();			}
+		}
+		public override Player Player{
+			get { return _sourcePlayer == null ? 
+				CardSource == null ? null : CardSource.Controler
+					: _sourcePlayer; 
+			}
+			set { _sourcePlayer = value; }
+		}
+		#endregion
 
 
 		public abstract string NextMessage();
@@ -99,7 +98,6 @@ namespace MagicCrow
 		public abstract int RequiredTargetCount { get; }
 		public abstract AttributGroup<Target> ValidTargets { get; }
 		public abstract List<Object> SelectedTargets { get; }
-		public abstract bool IsMandatory { get; }
 	}
 }
 
