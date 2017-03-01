@@ -12,10 +12,12 @@ using System.Threading;
 using System.Net;
 using System.Drawing.Imaging;
 using System.Drawing;
-
-//using GLU = OpenTK.Graphics.Glu;
 using Cairo;
 using System.Runtime.Serialization.Formatters.Binary;
+
+using MagicCrow.Triggers;
+using MagicCrow.Abilities;
+//using GLU = OpenTK.Graphics.Glu;
 
 namespace MagicCrow
 {	
@@ -31,9 +33,9 @@ namespace MagicCrow
         public string Name;
         public Cost Cost;
         public AttributGroup<CardTypes> Types = new AttributGroup<CardTypes>();
-		public List<Abilities.Ability> Abilities = new List<Abilities.Ability>();
-        public List<Trigger> Triggers = new List<Trigger>();
-		public List<EffectGroup> SpellEffects = new List<EffectGroup> ();
+		public List<Ability> Abilities = new List<Ability>();
+		public List<Trigger> Triggers = new List<Trigger>();
+		public List<EvasionKeyword> Keywords = new List<EvasionKeyword> ();
         public List<string> Konstrains = new List<string>();
         public List<string> R = new List<string>();
         public List<string> DeckNeeds = new List<string>();
@@ -92,13 +94,13 @@ namespace MagicCrow
 		}
 		public bool IsCreature { get { return Types == CardTypes.Creature; } }
 		public Ability[] StaticAbilities {
-			get { return Abilities.Where (a => a.IsStaticAbility).ToArray(); }
+			get { return Abilities.Where (a => a.Category == AbilityCategory.Static).ToArray(); }
 		}
 		public Ability[] TriggeredAbilities {
-			get { return Abilities.Where (a => a.IsTriggeredAbility).ToArray(); }
+			get { return Abilities.Where (a => a.Category == AbilityCategory.DrawBack).ToArray(); }
 		}
 		public Ability[] ActivatedAbilities {
-			get { return Abilities.Where (a => a.IsActivatedAbility).ToArray(); }
+			get { return Abilities.Where (a => a.Category == AbilityCategory.Acivated).ToArray(); }
 		}
 
 
@@ -220,9 +222,8 @@ namespace MagicCrow
 			Name = "";
 			Cost = null;
 			Types = new AttributGroup<CardTypes>();
-			Abilities = new List<Abilities.Ability>();
+			Abilities = new List<Ability>();
 			Triggers = new List<Trigger>();
-			SpellEffects = new List<EffectGroup> ();
 			Konstrains = new List<string>();
 			R = new List<string>();
 			DeckNeeds = new List<string>();
@@ -244,6 +245,10 @@ namespace MagicCrow
 			picturePath = "";
 			nbrImg = 1;
 			Alternate = false;			
+		}
+		public override string ToString ()
+		{
+			return string.Format("{0} | {1} | {2}", Name, Types, Cost);
 		}
     }
 

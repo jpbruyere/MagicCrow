@@ -34,10 +34,10 @@ namespace MagicCrow
 			object o = svars.FirstOrDefault ().instance;
 			object value = null;
 
-			if (o is Ability)
-				value = Ability.Parse (datas);
-			else if (o is Trigger)
-				value = Ability.Parse (datas, o as Trigger);
+			if (o is Abilities.Ability)
+				value = Abilities.Ability.Parse (datas);
+			else if (o is Triggers.Trigger)
+				value = Abilities.Ability.Parse (datas);//, o as Triggers.Trigger);
 			else {
 				string[] tmp = datas.Split ('$');
 				switch (tmp[0]) {

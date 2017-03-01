@@ -18,7 +18,10 @@ namespace MagicCrow
 			base.InitInterface ();
 			(playerPanel.FindByName ("pic") as Image).Path = "image2/HAL9000.svg";
 		}
-
+		public override void CreatePlayOrDrawFirstChoice ()
+		{
+			CurrentState = PlayerStates.PlayDrawChoice;
+		}
 		public override void Process ()
 		{
 			MagicEngine e = MagicEngine.CurrentEngine;
@@ -28,10 +31,11 @@ namespace MagicCrow
 				return;
 			case PlayerStates.PlayDrawChoice:
 				//chose to play first
-				e.CurPlayerIdx = e.getPlayerIndex (this);
-				CurrentState = PlayerStates.InitialDraw;
+				onPlayFirst (null, null);
 				return;
-			case PlayerStates.InitialDraw:				
+			case PlayerStates.InitialDraw:
+				if (CardInstance.CardsVBO == null)
+					return;				
 				initialDraw ();
 				CurrentState = PlayerStates.KeepMuliganChoice;
 				return;
@@ -42,7 +46,7 @@ namespace MagicCrow
 			}
 
 
-			if (e.pp != this || e.State < EngineStates.CurrentPlayer)
+			if (e.pp != this)
 				return;
 
 			if (HasActionPending)
@@ -180,7 +184,7 @@ namespace MagicCrow
 			if (lands.Length > 0) {
 				lands [0].ChangeZone (CardGroupEnum.InPlay);
 				AllowedLandsToBePlayed--;
-				MagicEngine.CurrentEngine.RaiseMagicEvent (new MagicEventArg (MagicEventType.PlayLand, lands [0]));
+				MagicEngine.CurrentEngine.RaiseMagicEvent (new MagicEventArg (Triggers.Mode.LandPlayed, lands [0]));
 				return true;
 			}
 			return false;

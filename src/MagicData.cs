@@ -12,7 +12,9 @@ using ICSharpCode.SharpZipLib.Zip;
 using System.Text.RegularExpressions;
 using OpenTK.Graphics.OpenGL;
 using System.Runtime.Serialization.Formatters.Binary;
-using MagicCrow.Effects;
+
+using MagicCrow.Triggers;
+using MagicCrow.Abilities;
 
 namespace MagicCrow
 {
@@ -208,7 +210,9 @@ namespace MagicCrow
 						}
 						break;
 					case "a":
-						c.Abilities.Add(Abilities.Ability.Parse(tmp[1]));
+						Abilities.Ability na = Abilities.Ability.Parse (tmp [1]);
+						if (na != null)
+							c.Abilities.Add (na);
 						break;
 					case "oracle":
 						c.Oracle = string.Join ("\n", tmp.ToList ().GetRange (1, tmp.Length - 1).ToArray ());
@@ -236,7 +240,7 @@ namespace MagicCrow
 //							} else
 //								Debugger.Break;
 
-						c.SpellEffects.Add(EffectGroup.Parse(tmp[1]));
+
 						break;
 					case "t":
 						c.Triggers.Add(Trigger.Parse(tmp[1]));
@@ -268,9 +272,15 @@ namespace MagicCrow
 						}
 						break;
 					case "k":
-						Ability a = Ability.ParseKeyword(tmp[1],c);
-						if (a != null)
-							c.Abilities.Add(a);
+						EvasionKeyword ae = EvasionKeyword.Unset;
+						if (!Enum.TryParse (tmp [1], true, out ae)) {
+							if (tmp [1] == "Double Strike")
+								ae = EvasionKeyword.DoubleStrike;							
+						}
+						if (ae == EvasionKeyword.Unset)
+							Debug.WriteLine ("unknown keyword in K: " + tmp [1]);
+						else
+							c.Keywords.Add (ae);						
 						break;
 					case "r":
 						c.R.Add(tmp[1]);
@@ -350,9 +360,7 @@ namespace MagicCrow
 					}
 					if (m != null)
 						c.Abilities.Add(
-							new Ability(new ManaEffect(m)) { 
-								ActivationCost = CostTypes.Tap 
-							});
+							new ManaAbility () { ActivationCost = CostTypes.Tap, Produced = m });
 				}
 			}
 			#endregion

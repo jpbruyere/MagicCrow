@@ -1,21 +1,2 @@
 ﻿<?xml version="1.0" encoding="UTF-8" ?>
-<MessageBox Message="Would you like to take a mulligan?" Background="0.2,0.2,0.2,0.7" Width="50%" Height="20%"
-	Ok="OnTakeMulligan"
-	Cancel="OnKeep">
-	<Template>
-		<Border	CornerRadius="8" BorderWidth="2" Foreground="White">
-			<VerticalStack Background="{./Background}" Margin="10">
-				<HorizontalStack Margin="5">
-					<Image Name="Image" Width="20%" Height="30" Path="#Crow.Images.Icons.iconInfo.svg" />
-					<Label Margin="5" Font="MagicMedieval, 20" Width="80%" Text="{./Message}"
-						TextAlignment="Left"
-						Multiline="true" />		
-				</HorizontalStack>
-				<HorizontalStack Margin="1" Spacing="0" Height="40" Width="60%" HorizontalAlignment="Right">
-					<Button CornerRadius="6" Width="50%" Height="Stretched" Font="MagicMedieval, 16" Caption="Ok" MouseClick="./onOkButtonClick" />
-					<Button CornerRadius="6" Width="50%" Height="Stretched" Font="MagicMedieval, 16" Caption="Cancel" MouseClick="./onCancelButtonClick" />
-				</HorizontalStack>
-			</VerticalStack>
-		</Border>
-	</Template>
-</MessageBox>
+<MessageBox Message="Would you like to take a mulligan?" Ok="OnTakeMulligan"	Cancel="OnKeep"/>

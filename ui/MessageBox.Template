@@ -1,0 +1,17 @@
+﻿<?xml version="1.0"?>
+<Border	CornerRadius="{./CornerRadius}" BorderWidth="2" Foreground="{./Foreground}">
+	<VerticalStack Background="{./Background}" Margin="10">
+		<HorizontalStack Margin="5">
+			<Image Name="Image" Width="20%" Height="30" Path="#Crow.Images.Icons.iconInfo.svg" />
+			<Label Margin="5" Font="MagicMedieval, 20" Width="80%" Text="{./Message}"
+				TextAlignment="Left"
+				Multiline="true" />		
+		</HorizontalStack>
+		<HorizontalStack Margin="1" Spacing="0" Height="40" Width="60%" HorizontalAlignment="Right">
+			<Button CornerRadius="6" Width="50%" Height="Stretched" Font="MagicMedieval, 16"
+				Caption="{OkMessage}" MouseClick="./onOkButtonClick" />
+			<Button CornerRadius="6" Width="50%" Height="Stretched" Font="MagicMedieval, 16"
+				Caption="{CancelMessage}" MouseClick="./onCancelButtonClick" />
+		</HorizontalStack>
+	</VerticalStack>
+</Border>

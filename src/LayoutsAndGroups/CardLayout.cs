@@ -64,7 +64,7 @@ namespace MagicCrow
 					Animation.StartAnimation (new FloatAnimation (c, "y", aY, 0.2f));
 
 					try {
-						if (c.CurrentGroup.GroupName == CardGroupEnum.InPlay && c.HasAbility (AbilityEnum.Flying))
+						if (c.CurrentGroup.GroupName == CardGroupEnum.InPlay && c.HasAbility (EvasionKeyword.Flying))
 							Animation.StartAnimation (new ShakeAnimation (c, "z", 0.5f, 0.6f));
 						else
 							Animation.StartAnimation (new FloatAnimation (c, "z", aZ, 0.1f));						

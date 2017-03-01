@@ -9,7 +9,6 @@ using Crow;
 using System.Diagnostics;
 using System.Threading;
 using OpenTK.Input;
-using MagicCrow.Effects;
 
 namespace MagicCrow
 {
@@ -35,13 +34,11 @@ namespace MagicCrow
 		public enum PlayerStates
 		{
 			Init,
-			DeckLoading,
 			PlayDrawChoice,		
 			InitialDraw,
 			WaitHandReady,
 			KeepMuliganChoice,
 			Ready,
-			SelectTarget,
 		}
 
         public static int InitialLifePoints = 20;
@@ -56,7 +53,6 @@ namespace MagicCrow
 		bool hasCombatDamage;
 
 		public volatile PlayerStates CurrentState;
-		public volatile bool DeckLoaded = false;
 		public Cost ManaPool;
 		public bool Keep = false;
 		public int CardToDraw = 7;
@@ -179,7 +175,7 @@ namespace MagicCrow
                 _lifePoints = value;
 
 				if (_lifePoints < 1)
-					MagicEngine.CurrentEngine.RaiseMagicEvent (new MagicEventArg (MagicEventType.PlayerHasLost, this));				
+					MagicEngine.CurrentEngine.RaiseMagicEvent (new MagicEventArg (Triggers.Mode.LosesGame, this));				
 
 				NotifyValueChange ("LifePoints", _lifePoints);
             }
@@ -274,7 +270,6 @@ namespace MagicCrow
 		#region interface
 		//public Panel playerPanel;
 		public GraphicObject playerPanel;
-		MessageBox msgBox;
 
 		Color ActiveColor = new Color (0.5, 0.5, 0.6, 0.7);
 		Color InactiveColor = new Color (0.1, 0.1, 0.1, 0.4);
@@ -296,23 +291,12 @@ namespace MagicCrow
 				return;
 			me.MagicStack.TryToHandleClick (this);
 		}
-		void createKeepMulliganChoice()
-		{
-			msgBox = Magic.CurrentGameWin.Load ("#MagicCrow.ui.keepOrMuligan.iml") as MessageBox;
-			msgBox.DataSource = this;
-		}
 		void OnKeep(Object sender, EventArgs _e)
 		{
-			Magic.CurrentGameWin.DeleteWidget (msgBox);
-			msgBox = null;
 			CurrentState = PlayerStates.Ready;
-			MagicEngine e = MagicEngine.CurrentEngine;
 		}
 		void OnTakeMulligan(Object sender, EventArgs e)
 		{
-			Magic.CurrentGameWin.DeleteWidget (msgBox);
-			msgBox = null;
-
 			for (int i = 0; i < CardToDraw; i++)
 				Library.AddCard (Hand.TakeTopOfStack);
 
@@ -320,29 +304,25 @@ namespace MagicCrow
 
 			CurrentState = PlayerStates.InitialDraw;
 		}
-		//
+		public virtual void CreatePlayOrDrawFirstChoice (){
+			MessageBox msgBox = MessageBox.Show (MessageBox.Type.YesNo, "You won the toss.\nDo You want to Play first?");
+			msgBox.Ok += onPlayFirst;
+			msgBox.Cancel += onDrawFirst;
+			CurrentState = PlayerStates.PlayDrawChoice;	
+		}
+		protected void onDrawFirst (object sender, EventArgs e){
+			MagicEngine.CurrentEngine.CurPlayerIdx = MagicEngine.CurrentEngine.getPlayerIndex (Opponent);
+			foreach (Player p in MagicEngine.CurrentEngine.Players)
+				p.CurrentState = PlayerStates.InitialDraw;				
+		}
+		protected void onPlayFirst (object sender, EventArgs e){
+			MagicEngine.CurrentEngine.CurPlayerIdx = MagicEngine.CurrentEngine.getPlayerIndex (this);
+			foreach (Player p in MagicEngine.CurrentEngine.Players)
+				p.CurrentState = PlayerStates.InitialDraw;	
+		}
 		#endregion
 		public volatile int LoadedCardsCount = 0;
 
-		#region deck async loading
-		public void LoadDeckCards(){
-			if (DeckLoaded) {
-				Reset (false);
-				return;
-			}
-			CurrentState = PlayerStates.DeckLoading;
-			Thread thread = new Thread(() => loadingThread());
-			thread.IsBackground = true;
-			thread.Start();
-		}
-		void loadingThread(){
-			Deck.LoadCards ();
-				
-			Reset (false);
-
-			DeckLoaded = true;
-		}
-		#endregion
 
         /// <summary>
         /// init life points, put all cards in library
@@ -427,39 +407,39 @@ namespace MagicCrow
 			}
 		}
 		#endregion
-
 			
 		public virtual void Process()
         {
 			MagicEngine e = MagicEngine.CurrentEngine;
 
-			switch (CurrentState) {
-			#region StartUp
-			case PlayerStates.Init:
-				return;
-			case PlayerStates.DeckLoading:
-				//if (!DeckLoaded)
-				//	return;
-				
-				return;
-			case PlayerStates.PlayDrawChoice:
-				return;
-			case PlayerStates.InitialDraw:
-				initialDraw ();
-				CurrentState = PlayerStates.WaitHandReady;
-				return;
-			case PlayerStates.WaitHandReady:
-				if (Deck.HasAnimatedCards)
+			if (e.State == EngineStates.Stopped) {
+				switch (CurrentState) {
+				#region StartUp
+				case PlayerStates.Init:
 					return;
-				createKeepMulliganChoice ();
-				CurrentState = PlayerStates.KeepMuliganChoice;
-				return;
-			case PlayerStates.KeepMuliganChoice:
-				return;
+				case PlayerStates.PlayDrawChoice:
+					return;
+				case PlayerStates.InitialDraw:
+					if (CardInstance.CardsVBO == null)
+						return;
+					initialDraw ();
+					CurrentState = PlayerStates.WaitHandReady;
+					return;
+				case PlayerStates.WaitHandReady:
+					if (Deck.HasAnimatedCards)
+						return;
+					MessageBox msgBox = MessageBox.Show (MessageBox.Type.YesNo, "Do you want to take a mulligan?");
+					msgBox.Ok += OnTakeMulligan;
+					msgBox.Cancel += OnKeep;
+					CurrentState = PlayerStates.KeepMuliganChoice;
+					return;
+				case PlayerStates.KeepMuliganChoice:
+					return;
 				#endregion
+				}
 			}
 
-			if (e.pp != this || e.State < EngineStates.CurrentPlayer)
+			if (e.pp != this)
 				return;
 
 			switch (e.CurrentPhase)
@@ -505,8 +485,8 @@ namespace MagicCrow
 
 			//            if (e.Chrono.ElapsedMilliseconds < MagicEngine.timerLength)
 			//                return;
-			if (e.MagicStack.Count == 0 && !PhaseStops[(int)e.CurrentPhase])
-				PhaseDone = true;
+			if (e.MagicStack.Count == 0 && !PhaseStops [(int)e.CurrentPhase])
+				e.Validate ();
 			//            e.Chrono.Stop();
         }
  
@@ -578,18 +558,18 @@ namespace MagicCrow
 
             foreach (CardInstance c in InPlay.Cards.Where(crd => !crd.IsTapped))
             {
-				foreach (Ability a in c.Model.Abilities.Where(a => a.ContainsEffect(EffectType.ProduceMana)))
-                {
-					ManaEffect me = a.Effects.OfType<ManaEffect> ().FirstOrDefault ();
-                    if (a.ActivationCost.Contains(CostTypes.Tap))
-                    {
-                        if (ma.remainingCost.Contains(me.ProducedMana))
-                        {
-							MagicEngine.CurrentEngine.MagicStack.PushOnStack(new AbilityActivation(c,a));
-                            return;
-                        }
-                    }
-                }
+//				foreach (Ability a in c.Model.Abilities.Where(a => a.ContainsEffect(EffectType.ProduceMana)))
+//                {
+//					ManaEffect me = a.Effects.OfType<ManaEffect> ().FirstOrDefault ();
+//                    if (a.ActivationCost.Contains(CostTypes.Tap))
+//                    {
+//                        if (ma.remainingCost.Contains(me.ProducedMana))
+//                        {
+//							MagicEngine.CurrentEngine.MagicStack.PushOnStack(new AbilityActivation(c,a));
+//                            return;
+//                        }
+//                    }
+//                }
             }
         }
 
@@ -601,12 +581,12 @@ namespace MagicCrow
                 foreach (CardInstance c in InPlay.Cards.Where(crd => !crd.IsTapped))
                 {
                     ManaChoice mc = new ManaChoice();
-					foreach (Ability a in c.Model.Abilities.Where(a => a.ContainsEffect(EffectType.ProduceMana)))
-                    {
-						ManaEffect me = a.Effects.OfType<ManaEffect> ().FirstOrDefault ();
-                        if (a.ActivationCost.Contains(CostTypes.Tap))
-                            mc += me.ProducedMana.Clone() as Mana;
-                    }
+//					foreach (Ability a in c.Model.Abilities.Where(a => a.ContainsEffect(EffectType.ProduceMana)))
+//                    {
+//						ManaEffect me = a.Effects.OfType<ManaEffect> ().FirstOrDefault ();
+//                        if (a.ActivationCost.Contains(CostTypes.Tap))
+//                            mc += me.ProducedMana.Clone() as Mana;
+//                    }
                     if (mc.Manas.Count == 0)
                         continue;
                     if (mc.Manas.Count == 1)

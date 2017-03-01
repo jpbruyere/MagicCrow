@@ -625,7 +625,7 @@ namespace MagicCrow
 			phasePannel.DataSource = this;
 
 			playerPannels = new GraphicObject[2];
-			for (int i = 0; i < 2; i++) {
+			for (int i = 0; i < Players.Length; i++) {
 				playerPannels[i] = Load ("#MagicCrow.ui.player.iml");
 				playerPannels[i].HorizontalAlignment = HorizontalAlignment.Left;
 				playerPannels[i].DataSource = Players[i];
@@ -635,11 +635,8 @@ namespace MagicCrow
 			new Deck(DeckList [P1DeckIdx],Players [0]);
 			new Deck(DeckList [P2DeckIdx],Players [1]);
 
-			Players [0].LoadDeckCards ();
-			Players [1].LoadDeckCards ();
-
 			engine = new MagicEngine (Players);
-			engine.MagicEvent += MagicEngine_MagicEvent;
+			engine.Phase += Engine_Phase; ;
 
 			engine.CurPlayerIdx = engine.interfacePlayer;
 
@@ -648,14 +645,16 @@ namespace MagicCrow
 			mstack.DataSource = engine.MagicStack;
 
 			updatePhaseStopsControls ();
+
+			flipACoin ();
 		}
+
 		void closeCurrentGame(){			
 			closeWindow ("#MagicCrow.ui.log.iml");
 			DeleteWidget (phasePannel);
 
 			for (int i = 0; i < 2; i++) {
-				Players[i].Deck.Cards = new List<CardInstance>();
-				Players[i].DeckLoaded = false;
+				Players[i].Deck.Cards = null;
 				Players[i].CurrentState = MagicCrow.Player.PlayerStates.Init;
 				DeleteWidget (playerPannels [i]);
 			}
@@ -669,31 +668,26 @@ namespace MagicCrow
 
 			loadWindow ("#MagicCrow.ui.mainMenu.iml");
 		}
-
-		void MagicEngine_MagicEvent (object sender, MagicEventArg arg)
+		void Engine_Phase (object sender, PhaseEventArg arg)
 		{
-//			Border b;
-//			switch (arg.Type)
-//			{
-//			case Triggers.Mode.LosesGame:
-//				//closeCurrentGame ();
-//				break;
-//			case Triggers.Mode.Phase:
-//				b = phasePannel.FindByName 
-//					((arg as PhaseEventArg).Phase.ToString ()) as Border;
-//				if (b!=null)
-//					b.Foreground = Color.White;				
-//				b = phasePannel.FindByName 
-//					((arg as PhaseEventArg).Phase.ToString ()) as Border;
-//				if (b!=null)
-//					b.Foreground = Color.Transparent;
-//				break;
-//			default:
-//				break;
-//			}
+			Border b;
+			switch (arg.Type)
+			{
+			case Triggers.Mode.EndPhase:
+				b = phasePannel.FindByName (arg.Phase.ToString ()) as Border;
+				b.Foreground = Color.Transparent;
+				break;
+			case Triggers.Mode.Phase:
+				b = phasePannel.FindByName (arg.Phase.ToString ()) as Border;
+				b.Foreground = Color.White;				
+				break;
+			}
 		}
 
-
+		void flipACoin(){
+			Random rnd = new Random();
+			engine.RaiseMagicEvent(new MagicEventArg(Triggers.Mode.FlippedCoin, Players[rnd.Next (0, 1)]));
+		}
 		#endregion
 
 		#region OTK window overrides
@@ -705,13 +699,9 @@ namespace MagicCrow
 
 			initInterface ();
 			initOpenGL ();
-
 			initGame ();
 
-
-
 			loadWindow ("#MagicCrow.ui.mainMenu.iml");
-			//loadWindow ("#MagicCrow.ui.engine.iml");
 		}
 		public override void GLClear ()
 		{
@@ -755,8 +745,8 @@ namespace MagicCrow
 			if (CardInstance.CardsVBO != null) {
 				CardInstance.CardsVBO.UpdateVBOSubData ();
 				CardInstance.OverlayVBO.UpdateVBOSubData ();
-				CardInstance.PointOverlayVBO.UpdateVBOSubData ();
 				CardInstance.InfoOverlayVBO.UpdateVBOSubData ();
+				CardInstance.PointOverlayVBO.UpdateVBOSubData ();
 				updateSelectionMap ();
 				updateTarget ();
 			}
@@ -831,10 +821,7 @@ namespace MagicCrow
 				break;
 			case OpenTK.Input.Key.E:
 				if (e.Control){
-					foreach (CardInstance ci in Players[0].Deck.Cards.Where
-						(c=>c.CurrentGroup.GroupName == CardGroupEnum.Library && c.Effects?.Count > 0)){
-						ci.ChangeZone(CardGroupEnum.Hand);
-					}
+
 				}	
 				break;
 			case OpenTK.Input.Key.D:
@@ -880,9 +867,9 @@ namespace MagicCrow
 				Players [0].Hand.AddCard(nextInvalid);
 				break;
 			case OpenTK.Input.Key.T:
-				foreach (CardInstance ci in Players[0].Library.Cards.Where(c=>c.HasEffect(EffectType.Token))){
-					ci.ChangeZone(CardGroupEnum.Hand);			
-				}
+//				foreach (CardInstance ci in Players[0].Library.Cards.Where(c=>c.HasEffect(EffectType.Token))){
+//					ci.ChangeZone(CardGroupEnum.Hand);			
+//				}
 				break;
 			case OpenTK.Input.Key.C:
 				foreach (CardInstance ci in Players[0].Library.Cards.Where(c=>c.HasType(CardTypes.Creature))){

@@ -13,7 +13,6 @@ using OpenTK.Graphics.OpenGL;
 
 //using GLU = OpenTK.Graphics.Glu;
 using Tetra.DynamicShading;
-using MagicCrow.Effects;
 
 namespace MagicCrow
 {
@@ -307,8 +306,8 @@ namespace MagicCrow
 		int _power = int.MinValue;
 		int _toughness = int.MinValue;
 		bool _isTapped = false;
-		bool _combating;
-		bool hasCombatDamage;
+		bool _combating = false;
+		bool hasCombatDamage = false;
 		Player _controler;
 
 		Player _originalControler;
@@ -383,13 +382,6 @@ namespace MagicCrow
 			return Counters.ContainsKey (counterName) ?
 				Counters [counterName] : 0;
 		}
-		public IList<EffectGroup> PumpEffect = new List<EffectGroup> ();
-		public IList<EffectGroup> Effects{
-			get { return Model.SpellEffects.Concat(PumpEffect).ToList(); }
-		}
-//		public IList<Effect> ActiveEffects{
-//			get { }
-//		}
 		public List<CardInstance> BlockingCreatures = new List<CardInstance>();
 		public List<Damage> Damages = new List<Damage>();
 		public CardInstance BlockedCreature = null;
@@ -401,7 +393,7 @@ namespace MagicCrow
 			c.AttachedTo = this;
 			AttachedCards.Add (c);
 
-			MagicEngine.CurrentEngine.RaiseMagicEvent (this, new MagicEventArg (Triggers.Mode.Attached, this, c));
+			MagicEngine.CurrentEngine.RaiseMagicEvent (new MagicEventArg (Triggers.Mode.Attached, this, c));
 			updateArrows ();
 
 			Controler.InPlay.UpdateLayout ();
@@ -411,7 +403,7 @@ namespace MagicCrow
 			c.AttachedTo = null;
 			AttachedCards.Remove (c);
 
-			MagicEngine.CurrentEngine.RaiseMagicEvent (this, new MagicEventArg (Triggers.Mode.Detached, this, c));
+			MagicEngine.CurrentEngine.RaiseMagicEvent (new MagicEventArg (Triggers.Mode.Detached, this, c));
 			updateArrows ();
 
 			Controler.InPlay.UpdateLayout ();
@@ -596,7 +588,6 @@ namespace MagicCrow
             	ResetPositionAndRotation();
             ResetOverlay();
 
-			PumpEffect.Clear ();
 			Counters.Clear ();
 			Damages.Clear();
 			HasCombatDamage = false;
@@ -615,59 +606,10 @@ namespace MagicCrow
 				AttachedTo.DetacheCard (this);
         }
 
-		public IEnumerable<Ability> getAllAbilities()
-		{
-			List<Ability> abs = new List<Ability>();
 
-			foreach (CardInstance ci in MagicEngine.CurrentEngine.CardsInPlayHavingEffects) {
-				bool valid = false;
-				foreach (EffectGroup eg in ci.Effects) {
-					foreach (CardTarget ct in eg.Affected.OfType<CardTarget>()) {
-						if (!ct.Accept (this, ci)) {
-							valid = false;
-							break;
-						} else
-							valid = true;
-					}
-					if (!valid)
-						continue;
-
-					foreach (AbilityEffect e in  eg.OfType<AbilityEffect>()) {
-						switch (e.TypeOfEffect) {
-						case EffectType.Gain:
-							abs.Add (e.Ability);
-							break;
-						case EffectType.Loose:
-							abs.RemoveAll (a => a.AbilityType == e.Ability.AbilityType);
-							break;
-						}
-					}
-				}
-			}
-			return Model.Abilities.Concat(abs);
-		}
-		public Ability[] getAbilitiesByType(AbilityEnum ae)
+        public bool HasAbility(EvasionKeyword ab)
         {
-			return getAllAbilities().Where (a => a.AbilityType == ae).ToArray();
-        }
-			        
-        public bool HasEffect(EffectType et)
-        {
-			foreach (EffectGroup eg in Effects) {
-				foreach (Effect e in eg) {
-					if (e.TypeOfEffect == et)
-						return true;
-				}
-			}
-			foreach (CardInstance ca in AttachedCards) {
-				if (ca.HasEffect (et))
-					return true;
-			}
-            return false;
-        }
-        public bool HasAbility(AbilityEnum ab)
-        {
-			return getAbilitiesByType (ab).Count () > 0;
+			return Model.Keywords.Contains (ab);
         }
 		public bool HasColor(ManaTypes color)
 		{
@@ -696,11 +638,11 @@ namespace MagicCrow
 				if (_isTapped || HasSummoningSickness ||!HasType(CardTypes.Creature))
                     return false;
 
-                if (HasAbility (AbilityEnum.Defender))
+                if (HasAbility (EvasionKeyword.Defender))
                     return false;
 
-                if (HasEffect(EffectType.CantAttack))
-                    return false;
+//                if (HasEffect(EffectType.CantAttack))
+//                    return false;
                 
                 return true;
             }
@@ -714,14 +656,14 @@ namespace MagicCrow
 			if (_isTapped || !HasType (CardTypes.Creature))
                 return false;
 			
-			if (HasEffect(EffectType.CantBlock))
-				return false;
+//			if (HasEffect(EffectType.CantBlock))
+//				return false;
 
 			if (blockedCard == null)
 				return true;
 
-            if ( blockedCard.HasAbility(AbilityEnum.Flying) && 
-                ! (this.HasAbility(AbilityEnum.Flying) || this.HasAbility(AbilityEnum.Reach)))
+            if ( blockedCard.HasAbility(EvasionKeyword.Flying) && 
+                ! (this.HasAbility(EvasionKeyword.Flying) || this.HasAbility(EvasionKeyword.Reach)))
                 return false;
 							
             return true;
@@ -772,44 +714,44 @@ namespace MagicCrow
 			_power = int.MinValue;
 			_toughness = int.MinValue;
 
-			foreach (CardInstance ci in MagicEngine.CurrentEngine.CardsInPlayHavingEffects) {
-				bool valid = false;
-				foreach (EffectGroup eg in ci.Effects) {						
-					foreach (CardTarget ct in eg.Affected?.OfType<CardTarget>()) {
-						if (!ct.Accept (this, ci)) {
-							valid = false;
-							break;
-						} else
-							valid = true;
-					}
-					if (!valid)
-						continue;
-					foreach (NumericEffect e in  eg.OfType<NumericEffect>()) {
-						switch (e.TypeOfEffect) {
-						case EffectType.AddPower:
-							if (_power == int.MinValue)
-								_power = Model.Power;
-							_power += e.Amount.GetValue(ci) * e.Multiplier;
-							break;
-						case EffectType.SetPower:
-							if (_power == int.MinValue)
-								_power = Model.Power;
-							_power = e.Amount.GetValue(ci) * e.Multiplier;
-							break;
-						case EffectType.AddTouchness:
-							if (_toughness == int.MinValue)
-								_toughness = Model.Toughness;
-							_toughness += e.Amount.GetValue (ci);
-							break;
-						case EffectType.SetTouchness:
-							if (_toughness == int.MinValue)
-								_toughness = Model.Toughness;
-							_toughness = e.Amount.GetValue (ci);
-							break;
-						}
-					}						
-				}
-			}				
+//			foreach (CardInstance ci in MagicEngine.CurrentEngine.CardsInPlayHavingEffects) {
+//				bool valid = false;
+//				foreach (EffectGroup eg in ci.Effects) {						
+//					foreach (CardTarget ct in eg.Affected?.OfType<CardTarget>()) {
+//						if (!ct.Accept (this, ci)) {
+//							valid = false;
+//							break;
+//						} else
+//							valid = true;
+//					}
+//					if (!valid)
+//						continue;
+//					foreach (NumericEffect e in  eg.OfType<NumericEffect>()) {
+//						switch (e.TypeOfEffect) {
+//						case EffectType.AddPower:
+//							if (_power == int.MinValue)
+//								_power = Model.Power;
+//							_power += e.Amount.GetValue(ci) * e.Multiplier;
+//							break;
+//						case EffectType.SetPower:
+//							if (_power == int.MinValue)
+//								_power = Model.Power;
+//							_power = e.Amount.GetValue(ci) * e.Multiplier;
+//							break;
+//						case EffectType.AddTouchness:
+//							if (_toughness == int.MinValue)
+//								_toughness = Model.Toughness;
+//							_toughness += e.Amount.GetValue (ci);
+//							break;
+//						case EffectType.SetTouchness:
+//							if (_toughness == int.MinValue)
+//								_toughness = Model.Toughness;
+//							_toughness = e.Amount.GetValue (ci);
+//							break;
+//						}
+//					}						
+//				}
+//			}				
 
 			int damages = 0;
 			foreach (Damage d in Damages)
@@ -832,27 +774,27 @@ namespace MagicCrow
 		{
 			Player lastControler = Controler;
 			_controler = null;
-			foreach (CardInstance ci in MagicEngine.CurrentEngine.CardsInPlayHavingEffect(EffectType.GainControl)) {
-				bool valid = false;
-				foreach (EffectGroup eg in ci.Effects) {						
-					foreach (CardTarget ct in eg.Affected.OfType<CardTarget>()) {
-						if (!ct.Accept (this, ci)) {
-							valid = false;
-							break;
-						} else
-							valid = true;
-					}
-					if (!valid)
-						continue;
-					foreach (Effect e in  eg) {
-						switch (e.TypeOfEffect) {
-						case EffectType.GainControl:
-							_controler = ci.Controler;
-							break;
-						}
-					}						
-				}
-			}
+//			foreach (CardInstance ci in MagicEngine.CurrentEngine.CardsInPlayHavingEffect(EffectType.GainControl)) {
+//				bool valid = false;
+//				foreach (EffectGroup eg in ci.Effects) {						
+//					foreach (CardTarget ct in eg.Affected.OfType<CardTarget>()) {
+//						if (!ct.Accept (this, ci)) {
+//							valid = false;
+//							break;
+//						} else
+//							valid = true;
+//					}
+//					if (!valid)
+//						continue;
+//					foreach (Effect e in  eg) {
+//						switch (e.TypeOfEffect) {
+//						case EffectType.GainControl:
+//							_controler = ci.Controler;
+//							break;
+//						}
+//					}						
+//				}
+//			}
 			if (lastControler != Controler)
 				MagicEngine.CurrentEngine.RaiseMagicEvent (new MagicEventArg (Triggers.Mode.ChangesController, this, lastControler));
 			return _controler != null;
@@ -1099,7 +1041,7 @@ namespace MagicCrow
 
 		#region Overlays
 		int _lastPaintedPower = int.MinValue, _lastPaintedToughness = int.MinValue;
-		IEnumerable<AbilityEnum> _lastKnownAbilities;
+		IEnumerable<EvasionKeyword> _lastKnownAbilities;
 		public bool AbilityChangesDetected = false;
 
 		/// <summary>
@@ -1107,7 +1049,7 @@ namespace MagicCrow
 		/// </summary>
 		public void CheckAbilityChanges(){
 			Magic.AddLog ("DEBUG => ********* Check Ability Changes for : " + this.Name);
-			IEnumerable<AbilityEnum> abs = getAllAbilities ().Select (a => a.AbilityType).Distinct ();
+			IEnumerable<EvasionKeyword> abs = Model.Keywords;// EvasionKeyword; getAllAbilities ().Select (a => a.AbilityType).Distinct ();
 			int abCount = abs.Count ();
 
 			if (abCount > 0) {
@@ -1132,8 +1074,8 @@ namespace MagicCrow
 				return;
 			}
 
-			IEnumerator<AbilityEnum> e_abs = abs.GetEnumerator ();
-			IEnumerator<AbilityEnum> e_lk_abs = abs.GetEnumerator ();
+			IEnumerator<EvasionKeyword> e_abs = abs.GetEnumerator ();
+			IEnumerator<EvasionKeyword> e_lk_abs = abs.GetEnumerator ();
 
 			while (e_abs.MoveNext ()) {
 				e_lk_abs.MoveNext ();
@@ -1243,7 +1185,7 @@ namespace MagicCrow
 
 					gr.Translate (0, y);
 					gr.Scale (0.34, 0.32);
-					using (IEnumerator<AbilityEnum> e = _lastKnownAbilities.GetEnumerator()){
+					using (IEnumerator<EvasionKeyword> e = _lastKnownAbilities.GetEnumerator()){
 						while (e.MoveNext ()) {
 							MagicData.hSVGsymbols.RenderCairoSub (gr, "#" + e.Current.ToString ());
 							gr.Translate (100, 0);
@@ -1343,7 +1285,7 @@ namespace MagicCrow
 
         public override string ToString()
         {
-            return string.Format("{0} | {1} | {2}", Model.Name, Model.Types, Model.Cost);
+			return Model.ToString ();
         }
 
 		Random rnd = new Random();
